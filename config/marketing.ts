@@ -11,8 +11,8 @@ export const marketingConfig: MarketingConfig = {
       href: "/templates",
     },
     {
-      title: "Blog",
-      href: "/blog",
+      title: "Roadmap",
+      href: "/roadmap",
     },
     {
       title: "Book a Call",
