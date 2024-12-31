@@ -50,7 +50,7 @@ export default async function HeroLanding() {
             <Icons.arrowRight className="size-4" />
           </Link>
           <Link
-            href="/docs"
+            href="/templates"
             className={cn(
               buttonVariants({
                 variant: "outline",
@@ -60,8 +60,8 @@ export default async function HeroLanding() {
               "px-5",
             )}
           >
-            <Icons.bookOpen className="mr-2 size-4" />
-            <span>Documentation</span>
+            <Icons.package className="mr-2 size-4" />
+            <span>Templates</span>
           </Link>
         </div>
       </div>
