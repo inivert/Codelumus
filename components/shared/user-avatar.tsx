@@ -13,7 +13,7 @@ export function UserAvatar({ user, ...props }: UserAvatarProps) {
   return (
     <Avatar {...props}>
       {user.image ? (
-        <div className="w-full relative aspect-square">
+        <div className="relative w-full aspect-square">
           <Image
             fill
             src={user.image}

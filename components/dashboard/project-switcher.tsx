@@ -60,10 +60,10 @@ export default function ProjectSwitcher({
           >
             <div className="flex items-center space-x-3 pr-2">
               <div
-                className={cn(
-                  "size-3 shrink-0 rounded-full",
-                  selected.color,
-                )}
+              className={cn(
+                "size-3 shrink-0 rounded-full",
+                selected.color,
+              )}
               />
               <div className="flex items-center space-x-3">
                 <span
@@ -109,7 +109,7 @@ function ProjectList({
         <Link
           key={slug}
           className={cn(
-            "relative flex h-9 items-center gap-3 rounded-md p-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+            "relative flex h-9 items-center gap-3 p-3 text-muted-foreground rounded-md transition-colors hover:bg-accent hover:text-foreground",
           )}
           href="#"
           onClick={() => setOpenPopover(false)}
