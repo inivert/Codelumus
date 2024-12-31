@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export const metadata = constructMetadata({
-  title: "Admin – SaaS Starter",
+  title: "Admin",
   description: "Admin page for only admin management.",
 });
 

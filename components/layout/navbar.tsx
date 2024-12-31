@@ -2,6 +2,7 @@
 
 import { useContext } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSelectedLayoutSegment } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -49,7 +50,14 @@ export function NavBar({ scroll = false }: NavBarProps) {
       >
         <div className="flex gap-6 md:gap-10">
           <Link href="/" className="flex items-center space-x-1.5">
-            <Icons.logo />
+            <Image
+              src="/assets/prisma-16-svgrepo-com.svg"
+              alt="Codelumus Logo"
+              width={24}
+              height={24}
+              className="dark:invert"
+              priority
+            />
             <span className="font-urban text-xl font-bold">
               {siteConfig.name}
             </span>

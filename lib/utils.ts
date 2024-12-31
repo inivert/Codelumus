@@ -14,7 +14,7 @@ export function constructMetadata({
   title = siteConfig.name,
   description = siteConfig.description,
   image = siteConfig.ogImage,
-  icons = "/favicon.ico",
+  icons = "/favicon.svg",
   noIndex = false,
 }: {
   title?: string;
@@ -27,22 +27,21 @@ export function constructMetadata({
     title,
     description,
     keywords: [
-      "Next.js",
-      "React",
-      "Prisma",
-      "Neon",
-      "Auth.js",
-      "shadcn ui",
-      "Resend",
-      "React Email",
-      "Stripe",
+      "Development",
+      "Projects",
+      "Collaboration",
+      "Management",
+      "Code",
+      "Software",
+      "Team",
+      "Tools"
     ],
     authors: [
       {
-        name: "mickasmt",
+        name: "Codelumus",
       },
     ],
-    creator: "mickasmt",
+    creator: "Codelumus",
     openGraph: {
       type: "website",
       locale: "en_US",
@@ -56,9 +55,13 @@ export function constructMetadata({
       title,
       description,
       images: [image],
-      creator: "@miickasmt",
+      creator: "@codelumus",
     },
-    icons,
+    icons: {
+      icon: icons,
+      shortcut: icons,
+      apple: icons,
+    },
     metadataBase: new URL(siteConfig.url),
     manifest: `${siteConfig.url}/site.webmanifest`,
     ...(noIndex && {

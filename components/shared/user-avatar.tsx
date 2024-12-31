@@ -12,11 +12,22 @@ export function UserAvatar({ user, ...props }: UserAvatarProps) {
   return (
     <Avatar {...props}>
       {user.image ? (
-        <AvatarImage alt="Picture" src={user.image} referrerPolicy="no-referrer" />
+        <AvatarImage 
+          alt="Picture" 
+          src={user.image} 
+          referrerPolicy="no-referrer" 
+          crossOrigin="anonymous"
+        />
       ) : (
         <AvatarFallback>
           <span className="sr-only">{user.name}</span>
-          <Icons.user className="size-4" />
+          {user.name ? (
+            <span className="font-medium">
+              {user.name.charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <Icons.user className="size-4" />
+          )}
         </AvatarFallback>
       )}
     </Avatar>

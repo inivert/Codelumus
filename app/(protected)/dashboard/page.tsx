@@ -5,8 +5,8 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { EmptyPlaceholder } from "@/components/shared/empty-placeholder";
 
 export const metadata = constructMetadata({
-  title: "Dashboard – SaaS Starter",
-  description: "Create and manage content.",
+  title: "Codelumus Dashboard",
+  description: "Manage your Codelumus account and content.",
 });
 
 export default async function DashboardPage() {
@@ -16,15 +16,15 @@ export default async function DashboardPage() {
     <>
       <DashboardHeader
         heading="Dashboard"
-        text={`Current Role : ${user?.role} — Change your role in settings.`}
+        text="Welcome to Codelumus"
       />
       <EmptyPlaceholder>
         <EmptyPlaceholder.Icon name="post" />
-        <EmptyPlaceholder.Title>No content created</EmptyPlaceholder.Title>
+        <EmptyPlaceholder.Title>Welcome to Codelumus</EmptyPlaceholder.Title>
         <EmptyPlaceholder.Description>
-          You don&apos;t have any content yet. Start creating content.
+          Your central hub for managing your Codelumus experience.
         </EmptyPlaceholder.Description>
-        <Button>Add Content</Button>
+        <Button>Get Started</Button>
       </EmptyPlaceholder>
     </>
   );
