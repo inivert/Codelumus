@@ -93,10 +93,3 @@ export type FeatureLdg = {
   link: string;
   icon: keyof typeof Icons;
 };
-
-export type TestimonialType = {
-  name: string;
-  job: string;
-  image: string;
-  review: string;
-};
