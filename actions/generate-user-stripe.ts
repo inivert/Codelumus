@@ -11,8 +11,7 @@ export type responseAction = {
   stripeUrl?: string;
 }
 
-// const billingUrl = absoluteUrl("/dashboard/billing")
-const billingUrl = absoluteUrl("/pricing")
+const billingUrl = absoluteUrl("/dashboard/billing")
 
 export async function generateUserStripe(priceId: string): Promise<responseAction> {
   let redirectUrl: string = "";
@@ -61,6 +60,5 @@ export async function generateUserStripe(priceId: string): Promise<responseActio
     throw new Error("Failed to generate user stripe session");
   }
 
-  // no revalidatePath because redirect
   redirect(redirectUrl)
 }

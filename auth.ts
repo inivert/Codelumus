@@ -32,6 +32,18 @@ export const {
     async signIn({ user, account, profile }) {
       try {
         if (!user.email) return false;
+
+        // If signing in with Google, update the user's image
+        if (account?.provider === "google" && profile?.picture) {
+          await prisma.user.update({
+            where: { email: user.email },
+            data: { 
+              image: profile.picture,
+              name: profile.name || user.name
+            },
+          });
+        }
+
         return true;
       } catch (error) {
         console.error("Sign in error:", error);
@@ -46,13 +58,17 @@ export const {
         if (token.role && session.user) {
           session.user.role = token.role as UserRole;
         }
+        // Ensure image is always up to date
+        if (token.picture && session.user) {
+          session.user.image = token.picture as string;
+        }
         return session;
       } catch (error) {
         console.error("Session error:", error);
         return session;
       }
     },
-    async jwt({ token }) {
+    async jwt({ token, user, account, profile }) {
       try {
         if (!token.sub) return token;
 
@@ -60,6 +76,10 @@ export const {
         if (!dbUser) return token;
 
         token.role = dbUser.role;
+        // Update picture if available
+        if (dbUser.image) {
+          token.picture = dbUser.image;
+        }
         return token;
       } catch (error) {
         console.error("JWT error:", error);

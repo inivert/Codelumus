@@ -41,3 +41,10 @@ next-env.d.ts
 
 .vscode
 .contentlayer
+
+# Backups
+/backups
+backups/
+backups/*
+backups/env/.env.local.backup
+backups/database/*

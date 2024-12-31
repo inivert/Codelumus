@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn, formatDate } from "@/lib/utils";
+import { Icons } from "@/components/shared/icons";
+import { cn } from "@/lib/utils";
 import { UserSubscriptionPlan } from "types";
 
 interface BillingInfoProps extends React.HTMLAttributes<HTMLFormElement> {
@@ -22,37 +23,47 @@ export function BillingInfo({ userSubscriptionPlan }: BillingInfoProps) {
   const {
     title,
     description,
+    benefits,
     stripeCustomerId,
     isPaid,
     isCanceled,
-    stripeCurrentPeriodEnd,
   } = userSubscriptionPlan;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Subscription Plan</CardTitle>
+        <CardTitle>Plan Features</CardTitle>
         <CardDescription>
-          You are currently on the <strong>{title}</strong> plan.
+          {description}
         </CardDescription>
       </CardHeader>
-      <CardContent>{description}</CardContent>
-      <CardFooter className="flex flex-col items-center space-y-2 border-t bg-accent py-2 md:flex-row md:justify-between md:space-y-0">
+      <CardContent>
+        <ul className="space-y-2">
+          {benefits.map((feature) => (
+            <li key={feature} className="flex items-center gap-x-2 text-sm">
+              <Icons.check className="size-4 text-green-500" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      <CardFooter className="flex flex-col items-start space-y-2 md:flex-row md:justify-between md:space-x-0">
         {isPaid ? (
-          <p className="text-sm font-medium text-muted-foreground">
-            {isCanceled
-              ? "Your plan will be canceled on "
-              : "Your plan renews on "}
-            {formatDate(stripeCurrentPeriodEnd)}.
-          </p>
-        ) : null}
-
-        {isPaid && stripeCustomerId ? (
-          <CustomerPortalButton userStripeId={stripeCustomerId} />
+          <div className="flex flex-col gap-2">
+            <CustomerPortalButton userStripeId={stripeCustomerId} />
+            <p className="text-xs text-muted-foreground">
+              Manage your subscription in the Stripe Customer Portal
+            </p>
+          </div>
         ) : (
-          <Link href="/pricing" className={cn(buttonVariants())}>
-            Choose a plan
-          </Link>
+          <div className="flex flex-col gap-2">
+            <Link href="/pricing" className={cn(buttonVariants())}>
+              Upgrade Plan
+            </Link>
+            <p className="text-xs text-muted-foreground">
+              Upgrade to unlock all features
+            </p>
+          </div>
         )}
       </CardFooter>
     </Card>
