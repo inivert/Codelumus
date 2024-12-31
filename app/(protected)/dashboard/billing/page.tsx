@@ -44,7 +44,7 @@ export default async function BillingPage() {
           >
             Stripe test cards
           </a>
-          . You won't be charged.
+          . You won&apos;t be charged.
         </AlertDescription>
       </Alert>
 

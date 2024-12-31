@@ -12,7 +12,7 @@ export default function BentoGrid() {
             <div className="relative m-auto size-fit">
               <div className="relative flex h-24 w-56 items-center">
                 <svg
-                  className="absolute inset-0 size-full text-muted-foreground/30"
+                  className="absolute inset-0 h-full w-full text-muted-foreground/30"
                   viewBox="0 0 254 104"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +37,7 @@ export default function BentoGrid() {
             <div>
               <div className="relative mx-auto flex aspect-square size-32 rounded-full border before:absolute before:-inset-2 before:rounded-full before:border before:bg-muted/20 dark:before:border-white/5">
                 <svg
-                  className="m-auto h-fit w-24"
+                  className="m-auto size-24 h-fit"
                   viewBox="0 0 212 143"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -102,7 +102,7 @@ export default function BentoGrid() {
           {/* Third card */}
           <div className="relative col-span-full overflow-hidden rounded-2xl border bg-background p-8 sm:col-span-3 lg:col-span-2">
             <div>
-              <div className="relative mx-auto flex aspect-square size-32 rounded-full border before:absolute before:-inset-2 before:rounded-full before:border before:bg-muted/20 dark:before:border-white/5 dark:before:bg-white/5 dark:before:border-white/5 dark:before:bg-white/5">
+              <div className="relative mx-auto flex aspect-square size-32 rounded-full border before:absolute before:-inset-2 before:rounded-full before:border before:bg-muted/20 dark:before:border-white/5 dark:before:bg-white/5">
                 <svg
                   className="m-auto size-16"
                   viewBox="0 0 24 24"
@@ -171,7 +171,7 @@ export default function BentoGrid() {
                 </div>
                 <div className="relative h-[200px] w-full overflow-hidden">
                   <svg
-                    className="h-full w-full"
+                    className="size-full"
                     viewBox="0 0 300 200"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -308,7 +308,7 @@ export default function BentoGrid() {
                 </div>
                 <div className="relative h-[200px] w-full overflow-hidden">
                   <svg
-                    className="h-full w-full"
+                    className="size-full"
                     viewBox="0 0 300 200"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
