@@ -1,12 +1,13 @@
 import { allGuides } from "contentlayer/generated";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Mdx } from "@/components/content/mdx-components";
 import { DocsPageHeader } from "@/components/docs/page-header";
 import { Icons } from "@/components/shared/icons";
 import { DashboardTableOfContents } from "@/components/shared/toc";
 import { getTableOfContents } from "@/lib/toc";
+import { getCurrentUser } from "@/lib/session";
 
 import "@/styles/mdx.css";
 
@@ -47,6 +48,9 @@ export default async function GuidePage({
     slug: string;
   };
 }) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") redirect("/login");
+
   const guide = allGuides.find((guide) => guide.slugAsParams === params.slug);
 
   if (!guide) {

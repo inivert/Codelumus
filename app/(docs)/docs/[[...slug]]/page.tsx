@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { allDocs } from "contentlayer/generated";
 
 import { getTableOfContents } from "@/lib/toc";
@@ -6,6 +6,7 @@ import { Mdx } from "@/components/content/mdx-components";
 import { DocsPageHeader } from "@/components/docs/page-header";
 import { DocsPager } from "@/components/docs/pager";
 import { DashboardTableOfContents } from "@/components/shared/toc";
+import { getCurrentUser } from "@/lib/session";
 
 import "@/styles/mdx.css";
 
@@ -52,6 +53,9 @@ export async function generateStaticParams(): Promise<
 }
 
 export default async function DocPage({ params }: DocPageProps) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") redirect("/login");
+
   const doc = await getDocFromParams(params);
 
   if (!doc) {

@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { allGuides } from "contentlayer/generated";
 import { compareDesc } from "date-fns";
 
 import { formatDate } from "@/lib/utils";
 import { DocsPageHeader } from "@/components/docs/page-header";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata = {
   title: "Guides",
@@ -12,7 +14,10 @@ export const metadata = {
     "This section includes end-to-end guides for developing Next.js 13 apps.",
 };
 
-export default function GuidesPage() {
+export default async function GuidesPage() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") redirect("/login");
+
   const guides = allGuides
     .filter((guide) => guide.published)
     .sort((a, b) => {
