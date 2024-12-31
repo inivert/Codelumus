@@ -33,8 +33,21 @@ export const {
       try {
         if (!user.email) return false;
 
+        // Debug log for Google sign-in
+        console.log("Sign-in attempt:", {
+          provider: account?.provider,
+          email: user.email,
+          picture: profile?.picture,
+          name: profile?.name
+        });
+
         // If signing in with Google, update the user's image
         if (account?.provider === "google" && profile?.picture) {
+          console.log("Updating user with Google profile:", {
+            email: user.email,
+            picture: profile.picture
+          });
+
           await prisma.user.update({
             where: { email: user.email },
             data: { 
@@ -42,6 +55,13 @@ export const {
               name: profile.name || user.name
             },
           });
+
+          // Verify update
+          const updatedUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            select: { image: true, name: true }
+          });
+          console.log("Updated user data:", updatedUser);
         }
 
         return true;
@@ -58,6 +78,12 @@ export const {
         if (token.role && session.user) {
           session.user.role = token.role as UserRole;
         }
+        // Debug log for session
+        console.log("Session update:", {
+          picture: token.picture,
+          sessionUserImage: session.user?.image
+        });
+
         // Ensure image is always up to date
         if (token.picture && session.user) {
           session.user.image = token.picture as string;
@@ -76,6 +102,12 @@ export const {
         if (!dbUser) return token;
 
         token.role = dbUser.role;
+        // Debug log for JWT
+        console.log("JWT update:", {
+          dbUserImage: dbUser.image,
+          tokenPicture: token.picture
+        });
+
         // Update picture if available
         if (dbUser.image) {
           token.picture = dbUser.image;
