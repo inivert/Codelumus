@@ -12,7 +12,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { UpgradeCard } from "@/components/dashboard/upgrade-card";
 import { Icons } from "@/components/shared/icons";
+import { useSession } from "next-auth/react";
 
 interface DashboardSidebarProps {
   links: SidebarNavItem[];
@@ -30,6 +31,8 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
   const path = usePathname();
   const { isTablet } = useMediaQuery();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(!isTablet);
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
@@ -148,9 +151,11 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
                 ))}
               </nav>
 
-              <div className="mt-auto xl:p-4">
-                {isSidebarExpanded ? <UpgradeCard /> : null}
-              </div>
+              {!isAdmin && (
+                <div className="mt-auto xl:p-4">
+                  {isSidebarExpanded ? <UpgradeCard /> : null}
+                </div>
+              )}
             </div>
           </aside>
         </ScrollArea>
@@ -163,6 +168,8 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const { isSm, isMobile } = useMediaQuery();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   if (isSm || isMobile) {
     return (
@@ -177,13 +184,18 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col p-0">
-          <ScrollArea className="h-full overflow-y-auto">
-            <div className="flex h-screen flex-col">
-              <nav className="flex flex-1 flex-col gap-y-8 p-6 text-lg font-medium">
+        <SheetContent side="left" className="flex w-full flex-col p-0 sm:max-w-[300px]">
+          <div className="border-b p-4">
+            <SheetTitle className="font-urban text-xl font-bold">Navigation Menu</SheetTitle>
+            <SheetDescription>Access all your dashboard features</SheetDescription>
+          </div>
+          <ScrollArea className="h-[calc(100vh-5rem)] overflow-y-auto">
+            <div className="flex h-full flex-col">
+              <nav className="flex flex-1 flex-col gap-y-6 p-4">
                 <Link
-                  href="#"
+                  href="/"
                   className="flex items-center gap-2 text-lg font-semibold"
+                  onClick={() => setOpen(false)}
                 >
                   <Icons.logo className="size-6" />
                   <span className="font-urban text-xl font-bold">
@@ -194,9 +206,9 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
                 {links.map((section) => (
                   <section
                     key={section.title}
-                    className="flex flex-col gap-0.5"
+                    className="flex flex-col gap-1"
                   >
-                    <p className="text-xs text-muted-foreground">
+                    <p className="px-2 text-xs font-medium text-muted-foreground">
                       {section.title}
                     </p>
 
@@ -212,7 +224,7 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
                               }}
                               href={item.disabled ? "#" : item.href}
                               className={cn(
-                                "flex items-center gap-3 rounded-md p-2 text-sm font-medium hover:bg-muted",
+                                "flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-muted",
                                 path === item.href
                                   ? "bg-muted"
                                   : "text-muted-foreground hover:text-accent-foreground",
@@ -220,8 +232,8 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
                                   "cursor-not-allowed opacity-80 hover:bg-transparent hover:text-muted-foreground",
                               )}
                             >
-                              <Icon className="size-5" />
-                              {item.title}
+                              <Icon className="size-5 shrink-0" />
+                              <span className="truncate">{item.title}</span>
                               {item.badge && (
                                 <Badge className="ml-auto flex size-5 shrink-0 items-center justify-center rounded-full">
                                   {item.badge}
@@ -234,11 +246,13 @@ export function MobileSheetSidebar({ links }: DashboardSidebarProps) {
                     })}
                   </section>
                 ))}
+              </nav>
 
-                <div className="mt-auto">
+              {!isAdmin && (
+                <div className="mt-auto border-t p-4">
                   <UpgradeCard />
                 </div>
-              </nav>
+              )}
             </div>
           </ScrollArea>
         </SheetContent>

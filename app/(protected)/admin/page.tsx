@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const metadata = constructMetadata({
   title: "Admin",
@@ -46,12 +47,14 @@ export default async function AdminPage() {
   const subscribers = await getSubscribedUsers();
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col space-y-6">
       <DashboardHeader
         heading="Admin Panel"
         text="Access only for users with ADMIN role."
       />
-      <div className="flex flex-col gap-5">
+      
+      <div className="flex flex-1 flex-col gap-5 p-4 md:p-8">
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -98,95 +101,168 @@ export default async function AdminPage() {
           </Card>
         </div>
 
+        {/* Recent Transactions */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <ScrollArea className="h-[400px] md:h-[500px]">
+              {/* Mobile View */}
+              <div className="grid gap-4 md:hidden">
                 {transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      <div className="font-medium">{transaction.customer.name}</div>
+                  <Card key={transaction.id}>
+                    <CardContent className="grid gap-2 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{transaction.customer.name}</div>
+                        <Badge variant={transaction.status === 'succeeded' ? 'default' : 'destructive'}>
+                          {transaction.status}
+                        </Badge>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {transaction.customer.email}
                       </div>
-                    </TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell>
-                      <Badge variant={transaction.status === 'succeeded' ? 'default' : 'destructive'}>
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(transaction.created)}</TableCell>
-                    <TableCell className="text-right">${transaction.amount.toFixed(2)}</TableCell>
-                  </TableRow>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>{transaction.type}</span>
+                        <span className="font-medium">${transaction.amount.toFixed(2)}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(transaction.created)}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div className="font-medium">{transaction.customer.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {transaction.customer.email}
+                          </div>
+                        </TableCell>
+                        <TableCell>{transaction.type}</TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.status === 'succeeded' ? 'default' : 'destructive'}>
+                            {transaction.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(transaction.created)}</TableCell>
+                        <TableCell className="text-right">${transaction.amount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 
+        {/* Subscribed Users */}
         <Card>
           <CardHeader>
             <CardTitle>Subscribed Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Plan ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Next Payment</TableHead>
-                  <TableHead>Cancellation</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <ScrollArea className="h-[400px] md:h-[500px]">
+              {/* Mobile View */}
+              <div className="grid gap-4 md:hidden">
                 {subscribers.map((subscriber) => (
-                  <TableRow key={subscriber.id}>
-                    <TableCell>
-                      <div className="font-medium">{subscriber.name}</div>
+                  <Card key={subscriber.id}>
+                    <CardContent className="grid gap-2 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{subscriber.name}</div>
+                        <Badge variant={getStatusColor(subscriber.status)}>
+                          {subscriber.status}
+                          {subscriber.cancelAtPeriodEnd && ' (Canceling)'}
+                        </Badge>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {subscriber.email}
                       </div>
-                    </TableCell>
-                    <TableCell>{subscriber.stripePriceId}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(subscriber.status)}>
-                        {subscriber.status}
-                        {subscriber.cancelAtPeriodEnd && ' (Canceling)'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(subscriber.stripeCurrentPeriodEnd)}</TableCell>
-                    <TableCell>
-                      {subscriber.cancelAt ? (
-                        <span className="text-sm text-muted-foreground">
-                          Cancels on {formatDate(subscriber.cancelAt)}
-                        </span>
-                      ) : subscriber.cancelAtPeriodEnd ? (
-                        <span className="text-sm text-muted-foreground">
-                          Cancels at period end
-                        </span>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
+                      <div className="text-sm">
+                        <span className="font-medium">Plan: </span>
+                        {subscriber.stripePriceId}
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium">Next Payment: </span>
+                        {formatDate(subscriber.stripeCurrentPeriodEnd)}
+                      </div>
+                      {(subscriber.cancelAt || subscriber.cancelAtPeriodEnd) && (
+                        <div className="text-sm text-muted-foreground">
+                          {subscriber.cancelAt
+                            ? `Cancels on ${formatDate(subscriber.cancelAt)}`
+                            : 'Cancels at period end'}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Plan ID</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Next Payment</TableHead>
+                      <TableHead>Cancellation</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscribers.map((subscriber) => (
+                      <TableRow key={subscriber.id}>
+                        <TableCell>
+                          <div className="font-medium">{subscriber.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {subscriber.email}
+                          </div>
+                        </TableCell>
+                        <TableCell>{subscriber.stripePriceId}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(subscriber.status)}>
+                            {subscriber.status}
+                            {subscriber.cancelAtPeriodEnd && ' (Canceling)'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(subscriber.stripeCurrentPeriodEnd)}</TableCell>
+                        <TableCell>
+                          {subscriber.cancelAt ? (
+                            <span className="text-sm text-muted-foreground">
+                              Cancels on {formatDate(subscriber.cancelAt)}
+                            </span>
+                          ) : subscriber.cancelAtPeriodEnd ? (
+                            <span className="text-sm text-muted-foreground">
+                              Cancels at period end
+                            </span>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

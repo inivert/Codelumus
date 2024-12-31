@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/table";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,7 +22,6 @@ export default async function MessagesPage() {
   }
 
   try {
-    // Query all support messages with user information using Prisma
     const messages = await prisma.supportMessage.findMany({
       include: {
         user: {
@@ -36,9 +37,51 @@ export default async function MessagesPage() {
     });
 
     return (
-      <div className="container mx-auto py-10">
-        <h1 className="mb-6 text-2xl font-bold">Support Messages</h1>
-        <div className="rounded-md border">
+      <div className="container mx-auto space-y-6 py-10">
+        <h1 className="text-2xl font-bold">Support Messages</h1>
+        
+        {/* Mobile View */}
+        <div className="grid gap-4 md:hidden">
+          {messages.map((msg) => (
+            <Card key={msg.id}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-base">
+                  <span>{msg.subject}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {new Date(msg.createdAt).toLocaleDateString()}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-2">
+                <div className="grid gap-1">
+                  <div className="text-sm font-medium">From</div>
+                  <div className="text-sm">
+                    <div>{msg.user?.name || "N/A"}</div>
+                    <div className="text-muted-foreground">{msg.user?.email}</div>
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <div className="text-sm font-medium">Website</div>
+                  <div className="text-sm">{msg.website}</div>
+                </div>
+                <div className="grid gap-1">
+                  <div className="text-sm font-medium">Message</div>
+                  <div className="text-sm">{msg.message}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {messages.length === 0 && (
+            <Card>
+              <CardContent className="py-4 text-center">
+                No support messages found
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden rounded-md border md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -57,12 +100,12 @@ export default async function MessagesPage() {
                   </TableCell>
                   <TableCell>
                     <div>{msg.user?.name || "N/A"}</div>
-                    <div className="text-sm text-gray-500">{msg.user?.email}</div>
+                    <div className="text-sm text-muted-foreground">{msg.user?.email}</div>
                   </TableCell>
                   <TableCell>{msg.website}</TableCell>
                   <TableCell>{msg.subject}</TableCell>
                   <TableCell className="max-w-md">
-                    <div className="truncate">{msg.message}</div>
+                    <div className="line-clamp-2">{msg.message}</div>
                   </TableCell>
                 </TableRow>
               ))}
