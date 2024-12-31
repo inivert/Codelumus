@@ -67,6 +67,8 @@ model User {
   stripePriceId          String?   @map(name: "stripe_price_id")
   stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
 
+  supportMessages SupportMessage[]
+
   @@map(name: "users")
 }
 
@@ -77,4 +79,18 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map(name: "verification_tokens")
+}
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  subject   String
+  website   String
+  message   String   @db.Text
+  userId    String   @map(name: "user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  @@index([userId])
+  @@map(name: "support_messages")
 }
