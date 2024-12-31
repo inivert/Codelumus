@@ -48,10 +48,14 @@ export default function ProjectSwitcher({
   return (
     <div>
       <Popover open={openPopover} onOpenChange={setOpenPopover}>
-        <PopoverTrigger>
-          <Button
-            className="h-8 px-2"
-            variant={openPopover ? "secondary" : "ghost"}
+        <PopoverTrigger asChild>
+          <div
+            className={cn(
+              buttonVariants({
+                variant: openPopover ? "secondary" : "ghost",
+              }),
+              "cursor-pointer h-8 px-2"
+            )}
             onClick={() => setOpenPopover(!openPopover)}
           >
             <div className="flex items-center space-x-3 pr-2">
@@ -76,7 +80,7 @@ export default function ProjectSwitcher({
               className="size-4 text-muted-foreground"
               aria-hidden="true"
             />
-          </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent align="start" className="max-w-60 p-2">
           <ProjectList
@@ -105,8 +109,7 @@ function ProjectList({
         <Link
           key={slug}
           className={cn(
-            buttonVariants({ variant: "ghost" }),
-            "relative flex h-9 items-center gap-3 p-3 text-muted-foreground hover:text-foreground",
+            "relative flex h-9 items-center gap-3 rounded-md p-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
           )}
           href="#"
           onClick={() => setOpenPopover(false)}

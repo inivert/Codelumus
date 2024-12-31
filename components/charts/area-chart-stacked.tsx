@@ -63,7 +63,11 @@ export function AreaChartStacked() {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              width={80}
+              height={40}
+              tickFormatter={(value: string) => value.slice(0, 3)}
+              scale="point"
+              padding={{ left: 10, right: 10 }}
             />
             <ChartTooltip
               cursor={false}

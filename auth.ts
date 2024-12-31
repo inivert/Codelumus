@@ -11,6 +11,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       role: UserRole;
+      id: string;
     } & DefaultSession["user"];
   }
 }
@@ -18,50 +19,62 @@ declare module "next-auth" {
 export const {
   handlers: { GET, POST },
   auth,
+  signIn,
+  signOut,
 } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
-    // error: "/auth/error",
+    error: "/error",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      try {
+        if (!user.email) return false;
+        return true;
+      } catch (error) {
+        console.error("Sign in error:", error);
+        return false;
+      }
+    },
     async session({ token, session }) {
-      if (session.user) {
-        if (token.sub) {
+      try {
+        if (token.sub && session.user) {
           session.user.id = token.sub;
         }
-
-        if (token.email) {
-          session.user.email = token.email;
+        if (token.role && session.user) {
+          session.user.role = token.role as UserRole;
         }
-
-        if (token.role) {
-          session.user.role = token.role;
-        }
-
-        session.user.name = token.name;
-        session.user.image = token.picture;
+        return session;
+      } catch (error) {
+        console.error("Session error:", error);
+        return session;
       }
-
-      return session;
     },
-
     async jwt({ token }) {
-      if (!token.sub) return token;
+      try {
+        if (!token.sub) return token;
 
-      const dbUser = await getUserById(token.sub);
+        const dbUser = await getUserById(token.sub);
+        if (!dbUser) return token;
 
-      if (!dbUser) return token;
-
-      token.name = dbUser.name;
-      token.email = dbUser.email;
-      token.picture = dbUser.image;
-      token.role = dbUser.role;
-
-      return token;
+        token.role = dbUser.role;
+        return token;
+      } catch (error) {
+        console.error("JWT error:", error);
+        return token;
+      }
+    }
+  },
+  events: {
+    async signIn(message) {
+      console.log("Sign in success:", message);
     },
+    async signOut(message) {
+      console.log("Sign out:", message);
+    }
   },
   ...authConfig,
-  // debug: process.env.NODE_ENV !== "production"
+  debug: true,
 });

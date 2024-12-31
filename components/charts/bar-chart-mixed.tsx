@@ -75,6 +75,8 @@ export function BarChartMixed() {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
+              width={80}
+              height={300}
               tickFormatter={(value) =>
                 chartConfig[value as keyof typeof chartConfig]?.label
               }

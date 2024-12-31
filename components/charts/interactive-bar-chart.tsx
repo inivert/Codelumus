@@ -187,13 +187,15 @@ export function InteractiveBarChart() {
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tickFormatter={(value) => {
+              tickFormatter={(value: string) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                 });
               }}
+              scale="point"
+              padding={{ left: 10, right: 10 }}
             />
             <ChartTooltip
               content={
