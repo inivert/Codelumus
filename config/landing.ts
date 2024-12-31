@@ -2,25 +2,24 @@ import { FeatureLdg, InfoLdg } from "types";
 
 export const infos: InfoLdg[] = [
   {
-    title: "Empower your projects",
+    title: "Grow your local business",
     description:
-      "Unlock the full potential of your projects with our open-source SaaS platform. Collaborate seamlessly, innovate effortlessly, and scale limitlessly.",
+      "Get a professional website that helps your local business thrive online. We handle everything from design to hosting, so you can focus on running your business.",
     image: "/_static/illustrations/work-from-home.jpg",
     list: [
       {
-        title: "Collaborative",
-        description: "Work together with your team members in real-time.",
+        title: "Professional Design",
+        description: "Custom-designed website that matches your brand and attracts customers.",
         icon: "laptop",
       },
       {
-        title: "Innovative",
-        description: "Stay ahead of the curve with access constant updates.",
+        title: "Full Service",
+        description: "We handle hosting, maintenance, and updates - no technical work for you.",
         icon: "settings",
       },
       {
-        title: "Scalable",
-        description:
-          "Our platform offers the scalability needed to adapt to your needs.",
+        title: "Local Focus",
+        description: "Optimized to help local customers find and connect with your business.",
         icon: "search",
       },
     ],
