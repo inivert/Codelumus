@@ -25,16 +25,18 @@ export function constructMetadata({
 } = {}): Metadata {
   return {
     title,
-    description,
+    description: `${description} | Contact us at ${siteConfig.mailSupport} or +1-555-123-4567 | Open Mon-Fri 9am-5pm | Serving San Francisco and surrounding areas`,
     keywords: [
-      "Development",
-      "Projects",
-      "Collaboration",
-      "Management",
-      "Code",
-      "Software",
-      "Team",
-      "Tools"
+      "Website Design",
+      "Local Business Websites",
+      "Web Hosting",
+      "Website Maintenance",
+      "Small Business Websites",
+      "Professional Websites",
+      "Local SEO",
+      "Website Services",
+      "Business Websites",
+      "Website Development"
     ],
     authors: [
       {
@@ -49,6 +51,14 @@ export function constructMetadata({
       title,
       description,
       siteName: title,
+      images: [
+        {
+          url: `${siteConfig.url}/_static/og.jpg`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",

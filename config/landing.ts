@@ -5,7 +5,7 @@ export const infos: InfoLdg[] = [
     title: "Grow your local business",
     description:
       "Get a professional website that helps your local business thrive online. We handle everything from design to hosting, so you can focus on running your business.",
-    image: "/_static/illustrations/work-from-home.jpg",
+    image: "/_static/illustrations/online-stats.svg",
     list: [
       {
         title: "Professional Design",
