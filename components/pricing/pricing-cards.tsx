@@ -32,6 +32,14 @@ export function PricingCards({ userId, subscriptionPlan }: PricingCardsProps) {
     setIsYearly(!isYearly);
   };
 
+  const formatPrice = (price: number) => {
+    return price.toFixed(2);
+  };
+
+  const calculateYearlyPrice = (monthlyPrice: number, yearlyPrice: number) => {
+    return formatPrice(yearlyPrice / 12);
+  };
+
   const PricingCard = ({ offer }: { offer: SubscriptionPlan }) => {
     return (
       <div
@@ -54,12 +62,12 @@ export function PricingCards({ userId, subscriptionPlan }: PricingCardsProps) {
                 {isYearly && offer.prices.monthly > 0 ? (
                   <>
                     <span className="mr-2 text-muted-foreground/80 line-through">
-                      ${offer.prices.monthly}
+                      ${formatPrice(offer.prices.monthly)}
                     </span>
-                    <span>${offer.prices.yearly / 12}</span>
+                    <span>${calculateYearlyPrice(offer.prices.monthly, offer.prices.yearly)}</span>
                   </>
                 ) : (
-                  `$${offer.prices.monthly}`
+                  `$${formatPrice(offer.prices.monthly)}`
                 )}
               </div>
               <div className="-mb-1 ml-2 text-left text-sm font-medium text-muted-foreground">
@@ -139,7 +147,11 @@ export function PricingCards({ userId, subscriptionPlan }: PricingCardsProps) {
   return (
     <MaxWidthWrapper>
       <section className="flex flex-col items-center text-center">
-        <HeaderSection label="Pricing" title="Start at full speed !" />
+        <HeaderSection 
+          label="Pricing" 
+          title="Choose your website plan" 
+          subtitle="I build modern, fast websites tailored to your needs" 
+        />
 
         <div className="mb-4 mt-10 flex items-center gap-5">
           <ToggleGroup
@@ -174,17 +186,16 @@ export function PricingCards({ userId, subscriptionPlan }: PricingCardsProps) {
         </div>
 
         <p className="mt-3 text-balance text-center text-base text-muted-foreground">
-          Email{" "}
+          Have questions? Email me at{" "}
           <a
             className="font-medium text-primary hover:underline"
-            href="mailto:support@saas-starter.com"
+            href="mailto:support@codelumus.com"
           >
-            support@saas-starter.com
-          </a>{" "}
-          for to contact our support team.
+            support@codelumus.com
+          </a>
           <br />
           <strong>
-            You can test the subscriptions and won&apos;t be charged.
+            I take on a limited number of projects to ensure quality. Let's discuss yours!
           </strong>
         </p>
       </section>
