@@ -54,7 +54,7 @@ export default function ProjectSwitcher({
               buttonVariants({
                 variant: openPopover ? "secondary" : "ghost",
               }),
-              "h-8 px-2 cursor-pointer"
+              "cursor-pointer h-8 px-2"
             )}
             onClick={() => setOpenPopover(!openPopover)}
           >

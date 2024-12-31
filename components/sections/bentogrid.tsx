@@ -12,7 +12,7 @@ export default function BentoGrid() {
             <div className="relative m-auto size-fit">
               <div className="relative flex h-24 w-56 items-center">
                 <svg
-                  className="absolute inset-0 h-full w-full text-muted-foreground/30"
+                  className="absolute inset-0 size-full text-muted-foreground/30"
                   viewBox="0 0 254 104"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
