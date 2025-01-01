@@ -31,6 +31,7 @@ import {
   Trash,
   User,
   X,
+  Mail,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -104,6 +105,7 @@ export const Icons = {
   laptop: Laptop,
   lineChart: LineChart,
   logo: Puzzle,
+  mail: Mail,
   media: Image,
   messages: MessagesSquare,
   moon: Moon,

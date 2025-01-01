@@ -33,6 +33,12 @@ export const sidebarLinks: SidebarNavItem[] = [
         authorizeOnly: UserRole.ADMIN,
       },
       {
+        href: "/dashboard/admin/invitations",
+        icon: "mail",
+        title: "Invitations",
+        authorizeOnly: UserRole.ADMIN,
+      },
+      {
         href: "#/dashboard/posts",
         icon: "post",
         title: "User Posts",
