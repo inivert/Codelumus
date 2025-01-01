@@ -1,20 +1,25 @@
 import { constructMetadata } from "@/lib/utils";
 import { InteractiveBarChart } from "@/components/charts/interactive-bar-chart";
+import { UserStatsChart } from "@/components/charts/user-stats-chart";
 import { DashboardHeader } from "@/components/dashboard/header";
+import { getUserStats } from "@/lib/admin";
 
 export const metadata = constructMetadata({
-  title: "Visitors Chart",
-  description: "Total visitors for the last 3 months",
+  title: "Charts Dashboard",
+  description: "Analytics and statistics",
 });
 
-export default function ChartsPage() {
+export default async function ChartsPage() {
+  const userStats = await getUserStats();
+
   return (
     <>
       <DashboardHeader
-        heading="Visitors Chart"
-        text="Total visitors for the last 3 months"
+        heading="Charts Dashboard"
+        text="Analytics and statistics"
       />
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-6">
+        <UserStatsChart data={userStats} />
         <InteractiveBarChart />
       </div>
     </>

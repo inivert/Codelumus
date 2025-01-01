@@ -151,4 +151,84 @@ export const getSubscribedUsers = unstable_cache(
   },
   ['stripe-subscribed-users'],
   { revalidate: 60 } // Cache for 1 minute
-); 
+);
+
+export async function getUserStats() {
+  try {
+    // Get all users count
+    const totalUsers = await prisma.user.count();
+
+    // Get users with active subscriptions
+    const activeSubscribers = await prisma.user.count({
+      where: {
+        stripeSubscriptionId: {
+          not: null,
+        },
+        stripeCurrentPeriodEnd: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    // Get users who had a subscription but cancelled
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const cancelledUsers = await prisma.user.count({
+      where: {
+        stripeCustomerId: { not: null }, // Has been a customer
+        stripeSubscriptionId: null, // No current subscription
+        updatedAt: {
+          gte: thirtyDaysAgo,
+        },
+      },
+    });
+
+    // Get users who never subscribed
+    const neverSubscribed = await prisma.user.count({
+      where: {
+        stripeCustomerId: null, // Never been a customer
+      },
+    });
+
+    // Get user stats by month for the last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const usersByMonth = await prisma.user.groupBy({
+      by: ['createdAt'],
+      where: {
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
+      },
+      _count: true,
+    });
+
+    const monthlyStats = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toISOString().slice(0, 7); // YYYY-MM format
+
+      const usersInMonth = usersByMonth.filter(stat => 
+        stat.createdAt.toISOString().startsWith(month)
+      );
+
+      return {
+        date: date.toISOString().slice(0, 10),
+        newUsers: usersInMonth.reduce((acc, curr) => acc + curr._count, 0),
+      };
+    }).reverse();
+
+    return {
+      totalUsers,
+      activeSubscribers,
+      cancelledUsers,
+      neverSubscribed,
+      monthlyStats,
+    };
+  } catch (error) {
+    console.error("Error getting user stats:", error);
+    throw error;
+  }
+} 
