@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,87 +7,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  ADMIN
-  USER
-}
-
 model Account {
-  id                String   @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  id                String   @id @default(cuid()) @db.VarChar(191)
+  userId            String   @db.VarChar(191)
+  type              String   @db.VarChar(191)
+  provider          String   @db.VarChar(191)
+  providerAccountId String   @db.VarChar(191)
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?  @db.Text
-  session_state     String?
-  createdAt         DateTime @default(now()) @map(name: "created_at")
-  updatedAt         DateTime @default(now()) @map(name: "updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token_type        String?  @db.VarChar(191)
+  scope             String?  @db.VarChar(191)
+  id_token          String?
+  session_state     String?  @db.VarChar(191)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
-  @@map(name: "accounts")
+  @@map("accounts")
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique @map(name: "session_token")
-  userId       String   @map(name: "user_id")
+  id           String   @id @default(cuid()) @db.VarChar(191)
+  sessionToken String   @unique @map("session_token") @db.VarChar(191)
+  userId       String   @map("user_id") @db.VarChar(191)
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map(name: "sessions")
+  @@map("sessions")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map(name: "email_verified")
-  image         String?
-  role          UserRole  @default(USER)
-  createdAt     DateTime  @default(now()) @map(name: "created_at")
-  updatedAt     DateTime  @default(now()) @map(name: "updated_at")
+  id                     String           @id @default(cuid()) @db.VarChar(191)
+  name                   String?          @db.VarChar(191)
+  email                  String?          @unique @db.VarChar(191)
+  emailVerified          DateTime?        @map("email_verified")
+  image                  String?          @db.VarChar(191)
+  role                   UserRole         @default(USER)
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @default(now()) @map("updated_at")
+  stripeCustomerId       String?          @unique @map("stripe_customer_id") @db.VarChar(191)
+  stripeSubscriptionId   String?          @unique @map("stripe_subscription_id") @db.VarChar(191)
+  stripePriceId          String?          @map("stripe_price_id") @db.VarChar(191)
+  stripeCurrentPeriodEnd DateTime?        @map("stripe_current_period_end")
+  accounts               Account[]
+  sessions               Session[]
+  supportMessages        SupportMessage[]
 
-  accounts Account[]
-  sessions Session[]
-
-  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
-  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
-  stripePriceId          String?   @map(name: "stripe_price_id")
-  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
-
-  supportMessages SupportMessage[]
-
-  @@map(name: "users")
+  @@map("users")
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
+  identifier String   @db.VarChar(191)
+  token      String   @unique @db.VarChar(191)
   expires    DateTime
 
   @@unique([identifier, token])
-  @@map(name: "verification_tokens")
+  @@map("verification_tokens")
 }
 
 model SupportMessage {
-  id        String   @id @default(cuid())
-  subject   String
-  website   String
-  message   String   @db.Text
-  userId    String   @map(name: "user_id")
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  subject   String   @db.VarChar(191)
+  website   String   @db.VarChar(191)
+  message   String
+  userId    String   @map("user_id") @db.VarChar(191)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) @map(name: "created_at")
-  updatedAt DateTime @updatedAt @map(name: "updated_at")
 
   @@index([userId])
-  @@map(name: "support_messages")
+  @@map("support_messages")
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
