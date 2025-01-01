@@ -2,6 +2,7 @@ import authConfig from "@/auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { UserRole } from "@prisma/client";
 import NextAuth, { type DefaultSession } from "next-auth";
+import { env } from "@/env.mjs";
 
 import { prisma } from "@/lib/db";
 import { getUserById } from "@/lib/user";
@@ -22,46 +23,114 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: "/login",
     error: "/error",
   },
+  secret: env.AUTH_SECRET,
+  debug: true,
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
-        if (!user.email) return false;
+        if (!user.email) {
+          console.log("Sign-in rejected: No email provided");
+          return false;
+        }
 
         // Debug log for Google sign-in
         console.log("Sign-in attempt:", {
           provider: account?.provider,
           email: user.email,
           picture: profile?.picture,
-          name: profile?.name
+          name: profile?.name,
+          account: account,
+          profile: profile
         });
 
-        // If signing in with Google, update the user's image
-        if (account?.provider === "google" && profile?.picture) {
-          console.log("Updating user with Google profile:", {
-            email: user.email,
-            picture: profile.picture
-          });
+        // Check if user exists in database
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: { accounts: true }
+        }).catch(err => {
+          console.error("Database query error:", err);
+          return null;
+        });
 
-          await prisma.user.update({
-            where: { email: user.email },
-            data: { 
-              image: profile.picture,
-              name: profile.name || user.name
-            },
-          });
+        console.log("Existing user check:", existingUser);
 
-          // Verify update
-          const updatedUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            select: { image: true, name: true }
-          });
-          console.log("Updated user data:", updatedUser);
+        // If signing in with Google
+        if (account?.provider === "google") {
+          try {
+            if (!existingUser) {
+              // Create new user if doesn't exist
+              console.log("Creating new user:", user.email);
+              const newUser = await prisma.user.create({
+                data: {
+                  email: user.email,
+                  name: profile?.name || user.name,
+                  image: profile?.picture,
+                  role: "USER",
+                  accounts: {
+                    create: {
+                      type: account.type,
+                      provider: account.provider,
+                      providerAccountId: account.providerAccountId,
+                      access_token: account.access_token,
+                      token_type: account.token_type,
+                      scope: account.scope,
+                      id_token: account.id_token,
+                      expires_at: account.expires_at
+                    }
+                  }
+                }
+              });
+              console.log("New user created:", newUser);
+            } else {
+              // User exists but might not have Google account linked
+              const hasGoogleAccount = existingUser.accounts.some(
+                acc => acc.provider === "google"
+              );
+
+              if (!hasGoogleAccount) {
+                // Link Google account to existing user
+                console.log("Linking Google account to existing user:", user.email);
+                await prisma.account.create({
+                  data: {
+                    userId: existingUser.id,
+                    type: account.type,
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                    access_token: account.access_token,
+                    token_type: account.token_type,
+                    scope: account.scope,
+                    id_token: account.id_token,
+                    expires_at: account.expires_at
+                  }
+                });
+              }
+
+              // Update user information
+              console.log("Updating existing user:", user.email);
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { 
+                  image: profile?.picture,
+                  name: profile?.name || user.name
+                }
+              });
+            }
+
+            return true;
+          } catch (dbError) {
+            console.error("Database operation failed:", dbError);
+            return false;
+          }
         }
 
         return true;
@@ -125,8 +194,9 @@ export const {
     },
     async signOut(message) {
       console.log("Sign out:", message);
+    },
+    async linkAccount({ user, account, profile }) {
+      console.log("Account linked:", { user, account, profile });
     }
   },
-  ...authConfig,
-  debug: true,
 });

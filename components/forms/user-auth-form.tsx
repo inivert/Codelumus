@@ -100,9 +100,20 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
       <button
         type="button"
         className={cn(buttonVariants({ variant: "outline" }))}
-        onClick={() => {
-          setIsGoogleLoading(true);
-          signIn("google");
+        onClick={async () => {
+          try {
+            setIsGoogleLoading(true);
+            console.log("Starting Google sign-in...");
+            const result = await signIn("google", {
+              callbackUrl: searchParams?.get("from") || "/dashboard",
+              redirect: true
+            });
+            console.log("Sign-in result:", result);
+          } catch (error) {
+            console.error("Sign-in error:", error);
+          } finally {
+            setIsGoogleLoading(false);
+          }
         }}
         disabled={isLoading || isGoogleLoading}
       >
