@@ -14,7 +14,7 @@ export async function sendInvitation(email: string) {
     }
 
     const invitationToken = crypto.randomUUID();
-    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/register?invitation=${invitationToken}`;
+    const invitationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
 
     const { data, error } = await resend.emails.send({
       from: `${siteConfig.name} <${process.env.EMAIL_FROM}>`,
