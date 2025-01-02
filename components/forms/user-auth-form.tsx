@@ -48,11 +48,15 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 
       if (checkResponse.status === 400 && responseData.error === "User already exists") {
         // If user exists, tell them to use Google sign-in
-        toast.error("Please use Google sign-in", {
-          description: "This email is already registered. Please sign in with Google.",
+        toast.error("Email already registered", {
+          description: "Please sign in with Google using this email address.",
           duration: 5000,
         });
-      } else if (checkResponse.ok) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (checkResponse.ok) {
         // If user doesn't exist, show success message
         toast.success("Thank you for your interest!", {
           description: "Please check your email for further instructions.",
