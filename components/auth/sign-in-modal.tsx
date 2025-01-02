@@ -5,6 +5,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { DialogTitle } from "@/components/ui/dialog";
 
 interface SignInModalProps {
   showSignInModal: boolean;
@@ -17,8 +18,10 @@ export function SignInModal({
 }: SignInModalProps) {
   return (
     <Modal showModal={showSignInModal} setShowModal={setShowSignInModal}>
-      <div className="flex flex-col space-y-4 p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+      <DialogTitle className="text-2xl font-semibold tracking-tight">
+        Welcome back
+      </DialogTitle>
+      <div className="flex flex-col space-y-4 p-6 pt-2">
         <p className="text-muted-foreground">
           Enter your email to sign in to your account
         </p>
