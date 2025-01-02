@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = []
 }
 
 datasource db {
@@ -56,6 +57,7 @@ model User {
   accounts               Account[]
   sessions               Session[]
   supportMessages        SupportMessage[]
+  sentInvitations        Invitation[]      @relation("inviter")
 
   @@map("users")
 }
@@ -83,7 +85,26 @@ model SupportMessage {
   @@map("support_messages")
 }
 
+model Invitation {
+  id          String    @id @default(cuid()) @db.VarChar(191)
+  email       String    @db.VarChar(191)
+  invitedBy   User      @relation("inviter", fields: [inviterId], references: [id])
+  inviterId   String    @db.VarChar(191)
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([inviterId])
+  @@map("invitations")
+}
+
 enum UserRole {
   ADMIN
   USER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
 }

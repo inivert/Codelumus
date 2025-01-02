@@ -47,45 +47,79 @@ export const {
           return null;
         });
 
-        // Only allow sign in if user already exists in database
-        if (!existingUser) {
-          console.log("Sign-in rejected: User not in allowed users list");
-          return false; // Return false instead of redirecting
+        // Check for pending invitation
+        const pendingInvitation = await prisma.invitation.findFirst({
+          where: {
+            email: user.email,
+            status: "PENDING"
+          }
+        });
+
+        // Only allow sign in if user exists in database OR has a pending invitation
+        if (!existingUser && !pendingInvitation) {
+          console.log("Sign-in rejected: User not in allowed users list and no pending invitation");
+          return false;
         }
 
         // If signing in with Google and user exists
         if (account?.provider === "google") {
           try {
-            // Check if Google account is already linked
-            const hasGoogleAccount = existingUser.accounts.some(
-              acc => acc.provider === "google"
-            );
-
-            if (!hasGoogleAccount) {
-              // Link Google account to existing user
-              await prisma.account.create({
+            // If user doesn't exist but has invitation, create the user
+            if (!existingUser && pendingInvitation) {
+              const newUser = await prisma.user.create({
                 data: {
-                  userId: existingUser.id,
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                  expires_at: account.expires_at
+                  email: user.email,
+                  name: profile?.name || user.name,
+                  image: profile?.picture,
+                  role: "USER"
+                }
+              });
+              console.log("Created new user from invitation:", newUser);
+            }
+
+            // If user exists, check if Google account is already linked
+            if (existingUser) {
+              const hasGoogleAccount = existingUser.accounts.some(
+                acc => acc.provider === "google"
+              );
+
+              if (!hasGoogleAccount) {
+                // Link Google account to existing user
+                await prisma.account.create({
+                  data: {
+                    userId: existingUser.id,
+                    type: account.type,
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                    access_token: account.access_token,
+                    token_type: account.token_type,
+                    scope: account.scope,
+                    id_token: account.id_token,
+                    expires_at: account.expires_at
+                  }
+                });
+              }
+
+              // Update user information
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: { 
+                  image: profile?.picture,
+                  name: profile?.name || user.name
                 }
               });
             }
 
-            // Update user information
-            await prisma.user.update({
-              where: { id: existingUser.id },
-              data: { 
-                image: profile?.picture,
-                name: profile?.name || user.name
-              }
-            });
+            // If there's a pending invitation, update it to ACCEPTED
+            if (pendingInvitation) {
+              await prisma.invitation.update({
+                where: { id: pendingInvitation.id },
+                data: { status: "ACCEPTED" }
+              });
+              console.log('Updated invitation status to ACCEPTED for:', user.email);
+            }
+
+            return true;
           } catch (dbError) {
             console.error("Database operation failed:", dbError);
             return false;
