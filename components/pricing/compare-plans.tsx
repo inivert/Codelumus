@@ -1,7 +1,8 @@
 import { PlansRow } from "@/types";
 import { CircleCheck, Plus } from "lucide-react";
 
-import { comparePlans, addOns } from "@/config/subscriptions";
+import { addOns } from "@/config/subscriptions";
+import { comparePlans } from "@/config/pricing-data";
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 import { Card } from "@/components/ui/card";

@@ -1,29 +1,31 @@
-import { PlansRow, SubscriptionPlan, AddOn } from "types";
-import { env } from "@/env.mjs";
+import { AddOn, SubscriptionPlan } from "@/types";
 
 export const pricingData: SubscriptionPlan[] = [
   {
-    title: "Starter Plan",
-    description: "Everything you need for a professional website",
+    title: "Starter",
+    description: "Perfect for small businesses getting started with their online presence.",
     benefits: [
-      "5-page custom website",
-      "Free domain name",
-      "Mobile-friendly design",
-      "SSL security",
-      "2 monthly changes",
-      "Basic analytics",
-      "Contact form",
-      "Regular updates",
-      "Tech support"
+      "Custom Website Design",
+      "Mobile Responsive",
+      "SEO Optimization",
+      "Contact Form",
+      "Social Media Integration",
+      "Google Analytics",
+      "Basic Security Features",
+      "1 Year Domain Name",
+      "Web Hosting",
+      "SSL Certificate",
+      "5 Email Accounts",
+      "24/7 Support",
     ],
     limitations: [],
     prices: {
       monthly: 59,
-      yearly: 590, // 2 months free
+      yearly: 590,
     },
     stripeIds: {
-      monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
-      yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID,
+      monthly: "price_1QciwmDQyO648ofb0RFtTaDY",
+      yearly: "price_1QciwmDQyO648ofbuZJNeGon",
     },
   },
 ];
@@ -31,128 +33,107 @@ export const pricingData: SubscriptionPlan[] = [
 export const addOns: AddOn[] = [
   {
     id: "ecommerce",
-    title: "E-Commerce",
+    title: "E-Commerce Add-on",
+    description: "Add e-commerce functionality to your website",
     price: {
       monthly: 35,
-      yearly: 350
+      yearly: 350,
     },
-    description: "Turn your website into a full-featured online store with everything you need to sell products online.",
+    stripeIds: {
+      monthly: "price_1QctpJDQyO648ofbbCPMTaS6",
+      yearly: "price_1QctpJDQyO648ofbfTdhyNUP",
+    },
     features: [
-      "Shopping cart",
-      "Payment processing",
-      "Product catalog",
-      "Order management",
-      "Inventory tracking"
-    ]
+      "Product Catalog",
+      "Shopping Cart",
+      "Secure Checkout",
+      "Payment Gateway Integration",
+      "Order Management",
+      "Inventory Tracking",
+    ],
   },
   {
     id: "user-accounts",
-    title: "User Accounts",
+    title: "User Accounts Add-on",
+    description: "Add user account functionality to your website",
     price: {
       monthly: 25,
-      yearly: 250
+      yearly: 250,
     },
-    description: "Add member-only areas and user authentication to your website.",
+    stripeIds: {
+      monthly: "price_1QctpKDQyO648ofb2X6bWAW8",
+      yearly: "price_1QctpKDQyO648ofb0hqp25Mx",
+    },
     features: [
-      "Login system",
-      "Member areas",
-      "User dashboard",
-      "Password recovery"
-    ]
+      "User Registration",
+      "User Login",
+      "User Dashboard",
+      "Password Reset",
+      "Profile Management",
+      "Role-based Access",
+    ],
   },
   {
     id: "content-manager",
-    title: "Content Manager",
+    title: "Content Manager Add-on",
+    description: "Add content management functionality to your website",
     price: {
       monthly: 20,
-      yearly: 200
+      yearly: 200,
     },
-    description: "Easily manage your website content with a powerful content management system.",
+    stripeIds: {
+      monthly: "price_1QctpKDQyO648ofbMJsnB5un",
+      yearly: "price_1QctpLDQyO648ofb45dVAJbM",
+    },
     features: [
-      "Easy updates",
-      "Blog system",
-      "5 extra pages",
-      "Image optimization"
-    ]
+      "Blog Management",
+      "Media Library",
+      "Content Scheduling",
+      "SEO Tools",
+      "Categories & Tags",
+      "Content Analytics",
+    ],
   },
   {
-    id: "booking-system",
-    title: "Booking System",
+    id: "booking",
+    title: "Booking System Add-on",
+    description: "Add booking and scheduling functionality to your website",
     price: {
       monthly: 25,
-      yearly: 250
+      yearly: 250,
     },
-    description: "Let your customers book appointments and services directly through your website.",
+    stripeIds: {
+      monthly: "price_1QctpLDQyO648ofbAFwrRToS",
+      yearly: "price_1QctpLDQyO648ofbCdgvAlMF",
+    },
     features: [
-      "Online scheduling",
-      "Auto-confirmations",
-      "Calendar sync",
-      "Email reminders"
-    ]
+      "Online Booking",
+      "Calendar Management",
+      "Automated Reminders",
+      "Payment Integration",
+      "Staff Management",
+      "Service Management",
+    ],
   },
   {
     id: "extra-changes",
-    title: "Extra Changes",
+    title: "Extra Changes Add-on",
+    description: "Add additional design changes and updates to your website",
     price: {
       monthly: 15,
-      yearly: 150
+      yearly: 150,
     },
-    description: "Need more frequent updates? Get additional monthly changes with priority handling.",
+    stripeIds: {
+      monthly: "price_1QctpLDQyO648ofb827wxflH",
+      yearly: "price_1QctpMDQyO648ofbL6Vw7976",
+    },
     features: [
-      "2 additional monthly changes",
-      "Priority handling"
-    ]
-  }
-];
-
-export const specialDeals = [
-  "Save 15% on any 3 add-ons",
-  "First month: 50% OFF",
-  "Yearly: 2 months FREE"
-];
-
-export const includedFeatures = [
-  "Zero setup fees",
-  "Cancel anytime",
-  "Direct support",
-  "Daily backups",
-  "Security monitoring"
-];
-
-export const comparePlans: PlansRow[] = [
-  {
-    feature: "Pages",
-    starter: "5 pages",
-    tooltip: "Total number of custom pages included in your website.",
+      "Monthly Design Updates",
+      "Content Updates",
+      "Layout Changes",
+      "New Feature Implementation",
+      "Performance Optimization",
+      "Regular Maintenance",
+    ],
   },
-  {
-    feature: "Domain Name",
-    starter: "Free",
-    tooltip: "A custom domain name for your website.",
-  },
-  {
-    feature: "Design",
-    starter: "Mobile-friendly",
-    tooltip: "Your website will look great on all devices.",
-  },
-  {
-    feature: "Security",
-    starter: "SSL included",
-    tooltip: "Keep your website secure with SSL encryption.",
-  },
-  {
-    feature: "Monthly Changes",
-    starter: "2 changes",
-    tooltip: "Number of content updates included per month.",
-  },
-  {
-    feature: "Analytics",
-    starter: "Basic included",
-    tooltip: "Track your website's performance.",
-  },
-  {
-    feature: "Support",
-    starter: "Direct support",
-    tooltip: "Get help when you need it.",
-  }
 ];

@@ -45,7 +45,7 @@ export async function getUserSubscriptionPlan(
     pricingData.find((plan) => plan.stripeIds.monthly === user.stripePriceId) ||
     pricingData.find((plan) => plan.stripeIds.yearly === user.stripePriceId);
 
-  const plan = isPaid && userPlan ? userPlan : pricingData[0]
+  const plan = isPaid && userPlan ? userPlan : pricingData[0];
 
   const interval = isPaid
     ? userPlan?.stripeIds.monthly === user.stripePriceId
@@ -55,25 +55,52 @@ export async function getUserSubscriptionPlan(
       : null
     : null;
 
-  // Only check cancellation status if subscription exists
+  // Only check cancellation status and add-ons if subscription exists
   let isCanceled = false;
+  let activeAddons: string[] = [];
+
   if (isPaid && user.stripeSubscriptionId) {
     try {
+      console.log("Fetching subscription details from Stripe...");
       const stripePlan = await stripe.subscriptions.retrieve(
-        user.stripeSubscriptionId
-      )
-      isCanceled = stripePlan.cancel_at_period_end
+        user.stripeSubscriptionId,
+        {
+          expand: ['items.data.price.product']
+        }
+      );
+      
+      console.log("Stripe subscription items:", stripePlan.items.data);
+      
+      isCanceled = stripePlan.cancel_at_period_end;
+
+      // Get active add-ons from subscription items
+      activeAddons = stripePlan.items.data
+        .filter(item => {
+          console.log("Item product metadata:", item.price.product.metadata);
+          return item.price.product.metadata.type === 'addon';
+        })
+        .map(item => {
+          console.log("Found addon with ID:", item.price.product.metadata.addonId);
+          return item.price.product.metadata.addonId;
+        });
+
+      console.log("Active addons:", activeAddons);
+
     } catch (error) {
       console.error("Error fetching subscription:", error);
     }
   }
 
-  return {
+  const subscriptionPlan = {
     ...plan,
     ...user,
     stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd?.getTime(),
     isPaid,
     interval,
-    isCanceled
-  }
+    isCanceled,
+    activeAddons
+  };
+
+  console.log("Final subscription plan:", subscriptionPlan);
+  return subscriptionPlan;
 }

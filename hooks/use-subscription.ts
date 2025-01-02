@@ -11,9 +11,10 @@ export function useSubscriptionPlan() {
     queryKey: ["subscription", session?.user?.id],
     queryFn: getSubscription,
     enabled: !!session?.user?.id,
-    staleTime: 1000 * 60, // Cache for 1 minute
-    refetchInterval: 1000 * 60, // Refetch every minute
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 1, // Only retry once if the request fails
   });
 
   return {

@@ -1,39 +1,43 @@
 "use client";
 
 import { useTransition } from "react";
-import { openCustomerPortal } from "@/actions/open-customer-portal";
+import { generateUserStripe } from "@/actions/generate-user-stripe";
 
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/shared/icons";
-import { cn } from "@/lib/utils";
 
-interface CustomerPortalButtonProps {
+interface CustomerPortalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   userStripeId: string;
-  className?: string;
-  text?: string;
+  size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function CustomerPortalButton({
   userStripeId,
   className,
-  text = "Manage Subscription"
+  size,
+  ...props
 }: CustomerPortalButtonProps) {
   let [isPending, startTransition] = useTransition();
-  const generateUserStripeSession = openCustomerPortal.bind(null, userStripeId);
 
   const stripeSessionAction = () =>
-    startTransition(async () => await generateUserStripeSession());
+    startTransition(async () => await generateUserStripe(userStripeId));
 
   return (
-    <Button 
-      disabled={isPending} 
+    <Button
+      variant="default"
+      className={className}
+      disabled={isPending}
       onClick={stripeSessionAction}
-      className={cn(className)}
+      size={size}
+      {...props}
     >
       {isPending ? (
-        <Icons.spinner className="mr-2 size-4 animate-spin" />
-      ) : null}
-      {text}
+        <>
+          <Icons.spinner className="mr-2 size-4 animate-spin" /> Loading...
+        </>
+      ) : (
+        "Manage Subscription"
+      )}
     </Button>
   );
 }
