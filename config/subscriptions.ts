@@ -1,162 +1,158 @@
-import { PlansRow, SubscriptionPlan } from "types";
+import { PlansRow, SubscriptionPlan, AddOn } from "types";
 import { env } from "@/env.mjs";
 
 export const pricingData: SubscriptionPlan[] = [
   {
-    title: "Starter",
-    description: "Perfect for a simple online presence",
+    title: "Starter Plan",
+    description: "Everything you need for a professional website",
     benefits: [
-      "Single page website",
-      "Mobile responsive design",
-      "Basic SEO setup",
-      "Contact form setup",
-      "5 content sections",
-      "2 weeks of email support"
+      "5-page custom website",
+      "Free domain name",
+      "Mobile-friendly design",
+      "SSL security",
+      "2 monthly changes",
+      "Basic analytics",
+      "Contact form",
+      "Regular updates",
+      "Tech support"
     ],
-    limitations: [
-      "Domain not included",
-      "Basic design options",
-      "No database features",
-      "Standard hosting"
-    ],
+    limitations: [],
     prices: {
-      monthly: 0,
-      yearly: 0,
-    },
-    stripeIds: {
-      monthly: null,
-      yearly: null,
-    },
-  },
-  {
-    title: "Pro",
-    description: "For growing businesses and professionals",
-    benefits: [
-      "Up to 5 pages",
-      "Premium responsive design",
-      "Complete SEO setup",
-      "Domain configuration",
-      "Database setup",
-      "Online store ready",
-      "1 month of priority support",
-      "Weekly backups",
-      "Speed optimization"
-    ],
-    limitations: [
-      "Basic API options",
-      "Standard analytics"
-    ],
-    prices: {
-      monthly: 45,
-      yearly: 432, // $45 * 12 * 0.80 (20% discount)
+      monthly: 59,
+      yearly: 590, // 2 months free
     },
     stripeIds: {
       monthly: env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID,
       yearly: env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID,
     },
   },
-  {
-    title: "Enterprise",
-    description: "For custom web applications",
-    benefits: [
-      "Unlimited pages",
-      "Custom web app",
-      "Premium security",
-      "Fast-track development",
-      "Same-day responses",
-      "Custom integrations",
-      "Custom analytics",
-      "Daily backups",
-      "Load balancing",
-      "Direct access to me"
-    ],
-    limitations: [],
-    prices: {
-      monthly: 77,
-      yearly: 739, // $77 * 12 * 0.80 (20% discount)
-    },
-    stripeIds: {
-      monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID,
-      yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID,
-    },
-  },
 ];
 
-export const plansColumns = [
-  "starter",
-  "pro",
-  "enterprise",
-] as const;
+export const addOns: AddOn[] = [
+  {
+    id: "ecommerce",
+    title: "E-Commerce",
+    price: {
+      monthly: 35,
+      yearly: 350
+    },
+    description: "Turn your website into a full-featured online store with everything you need to sell products online.",
+    features: [
+      "Shopping cart",
+      "Payment processing",
+      "Product catalog",
+      "Order management",
+      "Inventory tracking"
+    ]
+  },
+  {
+    id: "user-accounts",
+    title: "User Accounts",
+    price: {
+      monthly: 25,
+      yearly: 250
+    },
+    description: "Add member-only areas and user authentication to your website.",
+    features: [
+      "Login system",
+      "Member areas",
+      "User dashboard",
+      "Password recovery"
+    ]
+  },
+  {
+    id: "content-manager",
+    title: "Content Manager",
+    price: {
+      monthly: 20,
+      yearly: 200
+    },
+    description: "Easily manage your website content with a powerful content management system.",
+    features: [
+      "Easy updates",
+      "Blog system",
+      "5 extra pages",
+      "Image optimization"
+    ]
+  },
+  {
+    id: "booking-system",
+    title: "Booking System",
+    price: {
+      monthly: 25,
+      yearly: 250
+    },
+    description: "Let your customers book appointments and services directly through your website.",
+    features: [
+      "Online scheduling",
+      "Auto-confirmations",
+      "Calendar sync",
+      "Email reminders"
+    ]
+  },
+  {
+    id: "extra-changes",
+    title: "Extra Changes",
+    price: {
+      monthly: 15,
+      yearly: 150
+    },
+    description: "Need more frequent updates? Get additional monthly changes with priority handling.",
+    features: [
+      "2 additional monthly changes",
+      "Priority handling"
+    ]
+  }
+];
+
+export const specialDeals = [
+  "Save 15% on any 3 add-ons",
+  "First month: 50% OFF",
+  "Yearly: 2 months FREE"
+];
+
+export const includedFeatures = [
+  "Zero setup fees",
+  "Cancel anytime",
+  "Direct support",
+  "Daily backups",
+  "Security monitoring"
+];
 
 export const comparePlans: PlansRow[] = [
   {
     feature: "Pages",
-    starter: "1 page",
-    pro: "Up to 5 pages",
-    enterprise: "Unlimited",
-    tooltip: "Total number of pages I'll create for your site.",
+    starter: "5 pages",
+    tooltip: "Total number of custom pages included in your website.",
   },
   {
-    feature: "Design Customization",
-    starter: "Basic",
-    pro: "Advanced",
-    enterprise: "Full Custom",
-    tooltip: "How much I can customize your site's design.",
+    feature: "Domain Name",
+    starter: "Free",
+    tooltip: "A custom domain name for your website.",
   },
   {
-    feature: "SEO Optimization",
-    starter: "Basic",
-    pro: "Full",
-    enterprise: "Advanced",
-    tooltip: "I'll optimize your site to rank better in search results.",
-  },
-  {
-    feature: "Response Time",
-    starter: "48 hours",
-    pro: "24 hours",
-    enterprise: "Same day",
-    tooltip: "How quickly I'll respond to your messages.",
-  },
-  {
-    feature: "Database Integration",
-    starter: null,
-    pro: "Basic",
-    enterprise: "Advanced",
-    tooltip: "I'll set up dynamic content features for your site.",
+    feature: "Design",
+    starter: "Mobile-friendly",
+    tooltip: "Your website will look great on all devices.",
   },
   {
     feature: "Security",
-    starter: "Basic SSL",
-    pro: "Enhanced",
-    enterprise: "Advanced",
-    tooltip: "I'll implement security measures to protect your site.",
+    starter: "SSL included",
+    tooltip: "Keep your website secure with SSL encryption.",
   },
   {
-    feature: "Backups",
-    starter: "Monthly",
-    pro: "Weekly",
-    enterprise: "Daily",
-    tooltip: "I'll back up your site to prevent data loss.",
-  },
-  {
-    feature: "Integrations",
-    starter: null,
-    pro: "Basic",
-    enterprise: "Advanced",
-    tooltip: "I'll connect your site with other services you use.",
+    feature: "Monthly Changes",
+    starter: "2 changes",
+    tooltip: "Number of content updates included per month.",
   },
   {
     feature: "Analytics",
-    starter: "Basic",
-    pro: "Advanced",
-    enterprise: "Custom",
-    tooltip: "I'll set up tools to track your site's performance.",
+    starter: "Basic included",
+    tooltip: "Track your website's performance.",
   },
   {
-    feature: "Performance",
-    starter: "Basic",
-    pro: "Advanced",
-    enterprise: "Premium",
-    tooltip: "I'll optimize your site for maximum speed.",
+    feature: "Support",
+    starter: "Direct support",
+    tooltip: "Get help when you need it.",
   }
 ];

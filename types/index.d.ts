@@ -94,3 +94,14 @@ export type FeatureLdg = {
   link: string;
   icon: keyof typeof Icons;
 };
+
+export type AddOn = {
+  id: string;
+  title: string;
+  price: {
+    monthly: number;
+    yearly: number;
+  };
+  description: string;
+  features: string[];
+};
