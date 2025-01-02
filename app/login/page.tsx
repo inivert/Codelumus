@@ -5,6 +5,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { LoginForm } from "@/components/auth/login-form";
 import { Shell } from "@/components/shells/shell";
+import { Button } from "@/components/ui/button";
 
 export default async function LoginPage() {
   const session = await auth();
@@ -22,12 +23,17 @@ export default async function LoginPage() {
       <Suspense>
         <LoginForm />
       </Suspense>
-      <p className="text-sm text-muted-foreground text-center">
-        Don&apos;t have an invitation?{" "}
-        <Link href="/" className="underline hover:text-primary">
-          Request access
+      <div className="flex flex-col items-center gap-2 text-center">
+        <p className="text-sm text-muted-foreground">
+          Don&apos;t have an invitation?
+        </p>
+        <Link href="/book-consultation">
+          <Button variant="outline" className="gap-2">
+            Request Access
+            <span aria-hidden="true">→</span>
+          </Button>
         </Link>
-      </p>
+      </div>
     </Shell>
   );
 }
