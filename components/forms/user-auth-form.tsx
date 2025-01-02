@@ -120,7 +120,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           try {
             setIsGoogleLoading(true);
             await signIn("google", {
-              callbackUrl: "/error?error=not_registered",
+              callbackUrl: searchParams?.get("from") || "/dashboard",
               redirect: true
             });
           } catch (error) {

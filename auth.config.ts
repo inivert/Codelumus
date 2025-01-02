@@ -19,7 +19,7 @@ export default {
   ],
   pages: {
     error: "/error",
-    signIn: "/error?error=not_registered"
+    signIn: "/login"
   },
   trustHost: true,
   cookies: {

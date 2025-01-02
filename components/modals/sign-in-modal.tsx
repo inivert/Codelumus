@@ -141,18 +141,11 @@ function SignInModal({
           <Button
             variant="outline"
             disabled={signInClicked}
-            onClick={async () => {
+            onClick={() => {
               setSignInClicked(true);
-              // Try Google sign in with redirect to dashboard
-              const result = await signIn("google", { 
-                redirect: false,
+              signIn("google", {
                 callbackUrl: "/dashboard"
               });
-              
-              // If sign in failed, redirect to error page
-              if (!result?.ok) {
-                window.location.href = "/error?error=not_registered";
-              }
             }}
           >
             {signInClicked ? (
