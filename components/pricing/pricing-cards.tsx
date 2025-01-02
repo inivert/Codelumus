@@ -2,23 +2,20 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Check, Info } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { BillingFormButton } from "@/components/forms/billing-form-button";
+import { CustomerPortalButton } from "@/components/forms/customer-portal-button";
 import { useModal } from "@/components/providers/modal-provider";
 import { HeaderSection } from "@/components/shared/header-section";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipTrigger,
-  TooltipProvider 
-} from "@/components/ui/tooltip";
 import { pricingData, addOns, specialDeals, includedFeatures } from "@/config/subscriptions";
+import { useSubscriptionPlan } from "@/hooks/use-subscription";
+import { Icons } from "@/components/shared/icons";
 
 const frequencies = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
@@ -33,6 +30,7 @@ export function PricingCards({ redirect }: PricingCardsProps) {
   const [frequency, setFrequency] = useState<"monthly" | "yearly">("monthly");
   const { data: session } = useSession();
   const { setShowSignInModal } = useModal();
+  const { subscriptionPlan, isLoading } = useSubscriptionPlan();
   const plan = pricingData[0];
 
   return (
@@ -81,11 +79,32 @@ export function PricingCards({ redirect }: PricingCardsProps) {
             </span>
           </p>
           {session ? (
-            <BillingFormButton
-              className="mt-6 w-full"
-              variant="default"
-              planId={plan.title.toLowerCase().replace(" ", "-")}
-            />
+            isLoading ? (
+              <Button className="mt-6 w-full" disabled>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </Button>
+            ) : subscriptionPlan?.isPaid ? (
+              <CustomerPortalButton 
+                userStripeId={subscriptionPlan.stripeCustomerId} 
+                className="mt-6 w-full"
+              />
+            ) : (
+              <BillingFormButton
+                offer={plan}
+                subscriptionPlan={{
+                  ...plan,
+                  stripePriceId: null,
+                  stripeSubscriptionId: null,
+                  stripeCustomerId: null,
+                  stripeCurrentPeriodEnd: null,
+                  isPaid: false,
+                  interval: null,
+                  isCanceled: false
+                }}
+                year={frequency === "yearly"}
+              />
+            )
           ) : (
             <Button
               onClick={() => setShowSignInModal(true)}

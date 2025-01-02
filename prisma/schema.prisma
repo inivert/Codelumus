@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = []
+  // Force type generation
 }
 
 datasource db {
@@ -55,9 +56,10 @@ model User {
   stripePriceId          String?          @map("stripe_price_id") @db.VarChar(191)
   stripeCurrentPeriodEnd DateTime?        @map("stripe_current_period_end")
   accounts               Account[]
+  adminUpdates           AdminUpdate[]
+  sentInvitations        Invitation[]     @relation("inviter")
   sessions               Session[]
   supportMessages        SupportMessage[]
-  sentInvitations        Invitation[]      @relation("inviter")
 
   @@map("users")
 }
@@ -86,16 +88,29 @@ model SupportMessage {
 }
 
 model Invitation {
-  id          String    @id @default(cuid()) @db.VarChar(191)
-  email       String    @db.VarChar(191)
-  invitedBy   User      @relation("inviter", fields: [inviterId], references: [id])
-  inviterId   String    @db.VarChar(191)
-  status      InvitationStatus @default(PENDING)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id        String           @id @default(cuid()) @db.VarChar(191)
+  email     String           @db.VarChar(191)
+  inviterId String           @db.VarChar(191)
+  status    InvitationStatus @default(PENDING)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  invitedBy User             @relation("inviter", fields: [inviterId], references: [id])
 
   @@index([inviterId])
   @@map("invitations")
+}
+
+model AdminUpdate {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  title     String   @db.VarChar(191)
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String   @db.VarChar(191)
+  createdBy User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("admin_updates")
 }
 
 enum UserRole {

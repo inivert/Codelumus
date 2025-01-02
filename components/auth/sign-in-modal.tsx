@@ -18,24 +18,28 @@ export function SignInModal({
 }: SignInModalProps) {
   return (
     <Modal showModal={showSignInModal} setShowModal={setShowSignInModal}>
-      <DialogTitle className="text-2xl font-semibold tracking-tight">
-        Welcome back
-      </DialogTitle>
-      <div className="flex flex-col space-y-4 p-6 pt-2">
-        <p className="text-muted-foreground">
-          Enter your email to sign in to your account
-        </p>
+      <div className="flex flex-col space-y-6 p-6">
+        <div className="flex flex-col space-y-2 text-center sm:text-left">
+          <DialogTitle className="text-2xl font-bold tracking-tight">
+            Welcome back
+          </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Enter your email to sign in to your account
+          </p>
+        </div>
+
         <Suspense>
           <LoginForm />
         </Suspense>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <p className="text-sm text-muted-foreground">
+
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="text-sm text-muted-foreground">
             Don&apos;t have an invitation?
-          </p>
-          <Link href="/book-consultation">
-            <Button variant="outline" className="gap-2">
+          </div>
+          <Link href="/book-consultation" className="w-full">
+            <Button variant="outline" className="w-full gap-2">
               Request Access
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true" className="text-muted-foreground">→</span>
             </Button>
           </Link>
         </div>

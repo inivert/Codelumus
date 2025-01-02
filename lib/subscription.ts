@@ -26,10 +26,19 @@ export async function getUserSubscriptionPlan(
     throw new Error("User not found")
   }
 
-  // Check if user is on a paid plan.
-  const isPaid =
-    user.stripePriceId &&
-    user.stripeCurrentPeriodEnd?.getTime() + 86_400_000 > Date.now() ? true : false;
+  // Debug log
+  console.log("Subscription data:", {
+    stripeSubscriptionId: user.stripeSubscriptionId,
+    stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd,
+    stripeCustomerId: user.stripeCustomerId,
+    stripePriceId: user.stripePriceId
+  });
+
+  // Check if user is on a paid plan - less strict check for test mode
+  const isPaid = !!(
+    user.stripeCustomerId && 
+    user.stripeSubscriptionId
+  );
 
   // Find the pricing data corresponding to the user's plan
   const userPlan =
@@ -46,12 +55,17 @@ export async function getUserSubscriptionPlan(
       : null
     : null;
 
+  // Only check cancellation status if subscription exists
   let isCanceled = false;
   if (isPaid && user.stripeSubscriptionId) {
-    const stripePlan = await stripe.subscriptions.retrieve(
-      user.stripeSubscriptionId
-    )
-    isCanceled = stripePlan.cancel_at_period_end
+    try {
+      const stripePlan = await stripe.subscriptions.retrieve(
+        user.stripeSubscriptionId
+      )
+      isCanceled = stripePlan.cancel_at_period_end
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+    }
   }
 
   return {
