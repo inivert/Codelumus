@@ -93,7 +93,7 @@ export function BillingInfo({ initialData }: BillingInfoProps) {
             <ul className="mt-4 grid gap-3">
               {plan.benefits.map((feature) => (
                 <li key={feature} className="flex items-center gap-x-3 text-sm">
-                  <Icons.check className="shrink-0 text-green-500 size-5" />
+                  <Icons.check className="size-5 shrink-0 text-green-500" />
                   <span>{feature}</span>
                 </li>
               ))}
