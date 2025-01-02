@@ -15,13 +15,13 @@ export default {
           response_type: "code"
         }
       }
-    }),
+    })
   ],
-  trustHost: true,
   pages: {
-    signIn: "/login",
     error: "/error",
+    signIn: "/error?error=not_registered"
   },
+  trustHost: true,
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,

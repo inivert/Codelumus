@@ -18,8 +18,8 @@ export const metadata = constructMetadata({
 export default async function BillingPage() {
   const user = await getCurrentUser();
 
-  if (!user || !user.id || user.role !== "USER") {
-    redirect("/login");
+  if (!user || !user.id) {
+    redirect("/error?error=not_registered");
   }
 
   const subscriptionPlan = await getUserSubscriptionPlan(user.id);

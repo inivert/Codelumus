@@ -17,7 +17,7 @@ interface ProtectedLayoutProps {
 export default async function Dashboard({ children }: ProtectedLayoutProps) {
   const user = await getCurrentUser();
 
-  if (!user) redirect("/login");
+  if (!user || !user.id) redirect("/error?error=not_registered");
 
   const filteredLinks = sidebarLinks.map((section) => ({
     ...section,

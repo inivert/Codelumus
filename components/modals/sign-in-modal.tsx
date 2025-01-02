@@ -39,25 +39,52 @@ function SignInModal({
 
     try {
       setIsEmailLoading(true);
-      const result = await signIn("resend", {
-        email: email.toLowerCase(),
-        redirect: false,
-        callbackUrl: "/dashboard",
+
+      // First check if user exists
+      const checkResponse = await fetch("/api/auth/access-required", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.toLowerCase() }),
       });
 
-      if (!result?.ok) {
-        toast.error("Something went wrong.", {
-          description: "Your sign in request failed. Please try again.",
+      const responseData = await checkResponse.json();
+
+      // If user exists (status 400), send magic link
+      if (checkResponse.status === 400 && responseData.error === "User already exists") {
+        // Send magic link for existing users
+        const result = await signIn("email", {
+          email: email.toLowerCase(),
+          redirect: false,
+          callbackUrl: "/dashboard",
         });
-        return;
-      }
 
-      toast.success("Check your email", {
-        description: "We sent you a login link. Be sure to check your spam too.",
-      });
-      setShowSignInModal(false);
+        if (!result?.ok) {
+          toast.error("Something went wrong.", {
+            description: "Your sign in request failed. Please try again.",
+          });
+          return;
+        }
+
+        toast.success("Check your email", {
+          description: "We sent you a login link. Be sure to check your spam too.",
+        });
+        setShowSignInModal(false);
+      } else if (checkResponse.ok) {
+        // If user doesn't exist, show access required message
+        toast.success("Thank you for your interest!", {
+          description: "Please check your email for further instructions.",
+        });
+        setShowSignInModal(false);
+      } else {
+        throw new Error(responseData.error || "Failed to process request");
+      }
     } catch (error) {
-      toast.error("Failed to send login link");
+      console.error("Error:", error);
+      toast.error("Something went wrong.", {
+        description: "Please try again or contact support if the problem persists.",
+      });
     } finally {
       setIsEmailLoading(false);
     }
@@ -114,13 +141,18 @@ function SignInModal({
           <Button
             variant="outline"
             disabled={signInClicked}
-            onClick={() => {
+            onClick={async () => {
               setSignInClicked(true);
-              signIn("google", { redirect: false }).then(() =>
-                setTimeout(() => {
-                  setShowSignInModal(false);
-                }, 400),
-              );
+              // Try Google sign in with redirect to dashboard
+              const result = await signIn("google", { 
+                redirect: false,
+                callbackUrl: "/dashboard"
+              });
+              
+              // If sign in failed, redirect to error page
+              if (!result?.ok) {
+                window.location.href = "/error?error=not_registered";
+              }
             }}
           >
             {signInClicked ? (

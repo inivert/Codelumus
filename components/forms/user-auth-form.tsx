@@ -34,23 +34,41 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   async function onSubmit(data: FormData) {
     setIsLoading(true);
 
-    const signInResult = await signIn("resend", {
-      email: data.email.toLowerCase(),
-      redirect: false,
-      callbackUrl: searchParams?.get("from") || "/dashboard",
-    });
-
-    setIsLoading(false);
-
-    if (!signInResult?.ok) {
-      return toast.error("Something went wrong.", {
-        description: "Your sign in request failed. Please try again."
+    try {
+      // First check if user exists
+      const checkResponse = await fetch("/api/auth/access-required", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: data.email.toLowerCase() }),
       });
-    }
 
-    return toast.success("Check your email", {
-      description: "We sent you a login link. Be sure to check your spam too.",
-    });
+      const responseData = await checkResponse.json();
+
+      if (checkResponse.status === 400 && responseData.error === "User already exists") {
+        // If user exists, tell them to use Google sign-in
+        toast.error("Please use Google sign-in", {
+          description: "This email is already registered. Please sign in with Google.",
+          duration: 5000,
+        });
+      } else if (checkResponse.ok) {
+        // If user doesn't exist, show success message
+        toast.success("Thank you for your interest!", {
+          description: "Please check your email for further instructions.",
+          duration: 5000,
+        });
+      } else {
+        throw new Error(responseData.error || "Failed to process request");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Something went wrong.", {
+        description: "Please try again or contact support if the problem persists.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -81,7 +99,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
             {isLoading && (
               <Icons.spinner className="mr-2 size-4 animate-spin" />
             )}
-            Sign In with Email
+            Sign in with Email
           </button>
         </div>
       </form>
@@ -101,14 +119,15 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         onClick={async () => {
           try {
             setIsGoogleLoading(true);
-            console.log("Starting Google sign-in...");
-            const result = await signIn("google", {
-              callbackUrl: searchParams?.get("from") || "/dashboard",
+            await signIn("google", {
+              callbackUrl: "/error?error=not_registered",
               redirect: true
             });
-            console.log("Sign-in result:", result);
           } catch (error) {
             console.error("Sign-in error:", error);
+            toast.error("Something went wrong", {
+              description: "Please try again or contact support if the problem persists.",
+            });
           } finally {
             setIsGoogleLoading(false);
           }

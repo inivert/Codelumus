@@ -54,7 +54,7 @@ export async function generateStaticParams(): Promise<
 
 export default async function DocPage({ params }: DocPageProps) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") redirect("/login");
+  if (!user || user.role !== "ADMIN") redirect("/error?error=not_registered");
 
   const doc = await getDocFromParams(params);
 

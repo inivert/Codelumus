@@ -49,7 +49,7 @@ export default async function GuidePage({
   };
 }) {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") redirect("/login");
+  if (!user || user.role !== "ADMIN") redirect("/error?error=not_registered");
 
   const guide = allGuides.find((guide) => guide.slugAsParams === params.slug);
 

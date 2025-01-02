@@ -16,7 +16,7 @@ export const metadata = {
 
 export default async function GuidesPage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") redirect("/login");
+  if (!user || user.role !== "ADMIN") redirect("/error?error=not_registered");
 
   const guides = allGuides
     .filter((guide) => guide.published)
