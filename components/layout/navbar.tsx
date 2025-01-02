@@ -1,6 +1,5 @@
 "use client";
 
-import { useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSelectedLayoutSegment } from "next/navigation";
@@ -16,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DocsSearch } from "@/components/docs/search";
 import { Icons } from "@/components/shared/icons";
 import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
+import { useModal } from "@/components/providers/modal-provider";
 
 interface NavBarProps {
   scroll?: boolean;
@@ -25,6 +25,7 @@ interface NavBarProps {
 export function NavBar({ scroll = false }: NavBarProps) {
   const scrolled = useScroll(50);
   const { data: session, status } = useSession();
+  const { setShowSignInModal } = useModal();
 
   const selectedLayout = useSelectedLayoutSegment();
   const documentation = selectedLayout === "docs";
@@ -121,17 +122,16 @@ export function NavBar({ scroll = false }: NavBarProps) {
               </Button>
             </Link>
           ) : status === "unauthenticated" ? (
-            <Link href="/login" className="hidden md:block">
-              <Button
-                className="gap-2 px-5"
-                variant="default"
-                size="sm"
-                rounded="full"
-              >
-                <span>Sign In</span>
-                <Icons.arrowRight className="size-4" />
-              </Button>
-            </Link>
+            <Button
+              className="gap-2 px-5"
+              variant="default"
+              size="sm"
+              rounded="full"
+              onClick={() => setShowSignInModal(true)}
+            >
+              <span>Sign In</span>
+              <Icons.arrowRight className="size-4" />
+            </Button>
           ) : (
             <Skeleton className="hidden h-9 w-28 rounded-full lg:flex" />
           )}
