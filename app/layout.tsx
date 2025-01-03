@@ -1,36 +1,62 @@
 import "@/styles/globals.css";
 
 import { fontGeist, fontHeading, fontSans, fontUrban } from "@/assets/fonts";
-import { SessionProvider } from "next-auth/react";
+import { Analytics } from "@vercel/analytics/react";
+import { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
-
-import { cn, constructMetadata } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
-import { Analytics } from "@/components/analytics";
-import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { ModalProvider } from "@/components/providers/modal-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import AuthProvider from "@/components/providers/session-provider";
+import { TailwindIndicator } from "@/components/tailwind-indicator";
+import { cn } from "@/lib/utils";
 
-interface RootLayoutProps {
+export const metadata: Metadata = {
+  title: {
+    default: "Codelumus",
+    template: "%s | Codelumus",
+  },
+  description: "Learn to code with interactive tutorials and challenges",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+      {
+        url: "/icon.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
+  manifest: "/site.webmanifest",
+};
+
+export default function RootLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export const metadata = constructMetadata();
-
-export default function RootLayout({ children }: RootLayoutProps) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
           fontUrban.variable,
           fontHeading.variable,
-          fontGeist.variable,
+          fontGeist.variable
         )}
       >
-        <SessionProvider>
+        <AuthProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -40,13 +66,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <QueryProvider>
               <ModalProvider>
                 {children}
-                <Analytics />
                 <Toaster richColors closeButton />
+                <Analytics />
                 <TailwindIndicator />
               </ModalProvider>
             </QueryProvider>
           </ThemeProvider>
-        </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

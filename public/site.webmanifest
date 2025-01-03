@@ -1,14 +1,21 @@
 {
   "name": "Codelumus",
   "short_name": "Codelumus",
+  "description": "Independent web developer for hire for small local businesses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
-      "src": "./favicons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/icon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }

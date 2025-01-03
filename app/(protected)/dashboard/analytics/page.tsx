@@ -8,10 +8,10 @@ import { BarChart } from "lucide-react";
 
 export const metadata = constructMetadata({
   title: "Analytics",
-  description: "Website analytics and user statistics",
+  description: "Monitor website traffic and user engagement",
 });
 
-export default async function ChartsPage() {
+export default async function AnalyticsPage() {
   const user = await getCurrentUser();
 
   if (!user || user.role !== "ADMIN") {
@@ -51,4 +51,4 @@ export default async function ChartsPage() {
       </div>
     </div>
   );
-} 
+}
