@@ -19,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UpgradeCard } from "@/components/dashboard/upgrade-card";
 import { Icons } from "@/components/shared/icons";
 import { useSession } from "next-auth/react";
 
@@ -150,12 +149,6 @@ export function DashboardSidebar({ links }: DashboardSidebarProps) {
                   </section>
                 ))}
               </nav>
-
-              {!isAdmin && (
-                <div className="mt-auto xl:p-4">
-                  {isSidebarExpanded ? <UpgradeCard /> : null}
-                </div>
-              )}
             </div>
           </aside>
         </ScrollArea>

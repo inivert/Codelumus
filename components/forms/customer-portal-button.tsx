@@ -1,33 +1,52 @@
 "use client";
 
 import { useTransition } from "react";
-import { generateUserStripe } from "@/actions/generate-user-stripe";
-
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/shared/icons";
+import { toast } from "sonner";
 
 interface CustomerPortalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  userStripeId: string;
   size?: "default" | "sm" | "lg" | "icon";
 }
 
 export function CustomerPortalButton({
-  userStripeId,
   className,
   size,
+  children,
   ...props
 }: CustomerPortalButtonProps) {
   let [isPending, startTransition] = useTransition();
 
-  const stripeSessionAction = () =>
-    startTransition(async () => await generateUserStripe(userStripeId));
+  const handlePortalAccess = async () => {
+    try {
+      startTransition(async () => {
+        const response = await fetch("/api/stripe/portal", {
+          method: "POST",
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to access customer portal");
+        }
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error("No portal URL received");
+        }
+      });
+    } catch (error) {
+      console.error("Error accessing portal:", error);
+      toast.error("Failed to access customer portal");
+    }
+  };
 
   return (
     <Button
       variant="default"
       className={className}
       disabled={isPending}
-      onClick={stripeSessionAction}
+      onClick={handlePortalAccess}
       size={size}
       {...props}
     >
@@ -36,7 +55,7 @@ export function CustomerPortalButton({
           <Icons.spinner className="mr-2 size-4 animate-spin" /> Loading...
         </>
       ) : (
-        "Manage Subscription"
+        children || "Manage Subscription"
       )}
     </Button>
   );

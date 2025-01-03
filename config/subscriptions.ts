@@ -24,8 +24,8 @@ export const pricingData: SubscriptionPlan[] = [
       yearly: 590,
     },
     stripeIds: {
-      monthly: "price_1QciwmDQyO648ofb0RFtTaDY",
-      yearly: "price_1QciwmDQyO648ofbuZJNeGon",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PLAN_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_PRO_YEARLY_PLAN_ID!,
     },
   },
 ];
@@ -40,8 +40,8 @@ export const addOns: AddOn[] = [
       yearly: 350,
     },
     stripeIds: {
-      monthly: "price_1QctpJDQyO648ofbbCPMTaS6",
-      yearly: "price_1QctpJDQyO648ofbfTdhyNUP",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_ECOMMERCE_MONTHLY_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_ECOMMERCE_YEARLY_ID!,
     },
     features: [
       "Product Catalog",
@@ -61,8 +61,8 @@ export const addOns: AddOn[] = [
       yearly: 250,
     },
     stripeIds: {
-      monthly: "price_1QctpKDQyO648ofb2X6bWAW8",
-      yearly: "price_1QctpKDQyO648ofb0hqp25Mx",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_USER_ACCOUNTS_MONTHLY_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_USER_ACCOUNTS_YEARLY_ID!,
     },
     features: [
       "User Registration",
@@ -82,8 +82,8 @@ export const addOns: AddOn[] = [
       yearly: 200,
     },
     stripeIds: {
-      monthly: "price_1QctpKDQyO648ofbMJsnB5un",
-      yearly: "price_1QctpLDQyO648ofb45dVAJbM",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_CONTENT_MANAGER_MONTHLY_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_CONTENT_MANAGER_YEARLY_ID!,
     },
     features: [
       "Blog Management",
@@ -103,8 +103,8 @@ export const addOns: AddOn[] = [
       yearly: 250,
     },
     stripeIds: {
-      monthly: "price_1QctpLDQyO648ofbAFwrRToS",
-      yearly: "price_1QctpLDQyO648ofbCdgvAlMF",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_BOOKING_MONTHLY_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_BOOKING_YEARLY_ID!,
     },
     features: [
       "Online Booking",
@@ -124,8 +124,8 @@ export const addOns: AddOn[] = [
       yearly: 150,
     },
     stripeIds: {
-      monthly: "price_1QctpLDQyO648ofb827wxflH",
-      yearly: "price_1QctpMDQyO648ofbL6Vw7976",
+      monthly: process.env.NEXT_PUBLIC_STRIPE_EXTRA_CHANGES_MONTHLY_ID!,
+      yearly: process.env.NEXT_PUBLIC_STRIPE_EXTRA_CHANGES_YEARLY_ID!,
     },
     features: [
       "Monthly Design Updates",

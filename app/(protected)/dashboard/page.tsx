@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <>
+    <div className="container space-y-8">
       <DashboardHeader
         heading="Dashboard"
         text="Welcome to Codelumus"
@@ -59,6 +59,6 @@ export default async function DashboardPage() {
           </Card>
         )}
       </div>
-    </>
+    </div>
   );
 }

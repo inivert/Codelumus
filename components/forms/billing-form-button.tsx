@@ -29,6 +29,12 @@ export function BillingFormButton({
   
   const generateUserStripeSession = async () => {
     try {
+      // If user has an active subscription, redirect to billing portal
+      if (subscriptionPlan?.isPaid && !subscriptionPlan?.isCanceled) {
+        window.location.href = "https://billing.stripe.com/p/login/test_bIYdTPc5A0qsguY7ss";
+        return;
+      }
+
       const mainPriceId = offer.stripeIds[year ? "yearly" : "monthly"];
       if (!mainPriceId) {
         throw new Error("Main price ID is missing");
@@ -84,7 +90,7 @@ export function BillingFormButton({
           <Icons.spinner className="mr-2 size-4 animate-spin" /> Loading...
         </>
       ) : (
-        <>{userOffer ? "Manage Subscription" : "Upgrade"}</>
+        <>{subscriptionPlan?.isPaid ? "Manage Subscription" : "Get Started"}</>
       )}
     </Button>
   );
