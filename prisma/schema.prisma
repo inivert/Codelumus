@@ -1,7 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = []
-  // Force type generation
 }
 
 datasource db {
@@ -49,6 +48,7 @@ model User {
   emailVerified          DateTime?        @map("email_verified")
   image                  String?          @db.VarChar(191)
   role                   UserRole         @default(USER)
+  website                String?          @unique @map("website") @db.VarChar(191)
   createdAt              DateTime         @default(now()) @map("created_at")
   updatedAt              DateTime         @default(now()) @map("updated_at")
   stripeCustomerId       String?          @unique @map("stripe_customer_id") @db.VarChar(191)

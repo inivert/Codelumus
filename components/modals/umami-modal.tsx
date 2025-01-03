@@ -51,7 +51,6 @@ export function UmamiModal() {
           className="gap-2"
           onClick={() => {
             setIsOpen(true);
-            // Start loading iframe when button is clicked
             setIframeLoaded(true);
           }}
         >
@@ -77,7 +76,6 @@ export function UmamiModal() {
               className="h-8 w-8"
               onClick={() => {
                 setIsOpen(false);
-                // Reset iframe state when modal is closed
                 setIframeLoaded(false);
               }}
             >
@@ -86,7 +84,6 @@ export function UmamiModal() {
             </Button>
           </DialogClose>
         </DialogHeader>
-        {/* Only render iframe when modal is opened */}
         {iframeLoaded && <IframeWithLoading />}
       </DialogContent>
     </Dialog>
