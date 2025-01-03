@@ -60,6 +60,7 @@ model User {
   sentInvitations        Invitation[]     @relation("inviter")
   sessions               Session[]
   supportMessages        SupportMessage[]
+  analytics            UserAnalytics?
 
   @@map("users")
 }
@@ -111,6 +112,17 @@ model AdminUpdate {
 
   @@index([userId])
   @@map("admin_updates")
+}
+
+model UserAnalytics {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  userId    String   @unique @map("user_id") @db.VarChar(191)
+  umamiUrl  String   @map("umami_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_analytics")
 }
 
 enum UserRole {

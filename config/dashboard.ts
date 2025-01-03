@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 
-import { SidebarNavItem } from "types";
+import type { SidebarNavItem } from "@/types";
 
 export const sidebarLinks: SidebarNavItem[] = [
   {
@@ -32,6 +32,18 @@ export const sidebarLinks: SidebarNavItem[] = [
         authorizeOnly: UserRole.ADMIN,
       },
       {
+        href: "/dashboard/user-analytics",
+        icon: "lineChart",
+        title: "Website Analytics",
+        authorizeOnly: UserRole.USER,
+      },
+      {
+        href: "/dashboard/admin/user-analytics",
+        icon: "lineChart",
+        title: "User Analytics",
+        authorizeOnly: UserRole.ADMIN,
+      },
+      {
         href: "/dashboard/admin/updates",
         icon: "post",
         title: "Updates",
@@ -48,13 +60,6 @@ export const sidebarLinks: SidebarNavItem[] = [
         icon: "mail",
         title: "Invitations",
         authorizeOnly: UserRole.ADMIN,
-      },
-      {
-        href: "#/dashboard/posts",
-        icon: "post",
-        title: "User Posts",
-        authorizeOnly: UserRole.USER,
-        disabled: true,
       },
     ],
   },

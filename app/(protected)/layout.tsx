@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Toaster } from "sonner";
 
 import { sidebarLinks } from "@/config/dashboard";
 import { getCurrentUser } from "@/lib/session";
@@ -45,6 +46,7 @@ export default async function Dashboard({ children }: ProtectedLayoutProps) {
           </MaxWidthWrapper>
         </main>
       </div>
+      <Toaster />
     </div>
   );
 }
