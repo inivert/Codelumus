@@ -2,16 +2,17 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./db";
-import { UserRole } from "@prisma/client";
 import { DefaultSession } from "next-auth";
+
+type UserRole = "ADMIN" | "USER";
 
 declare module "next-auth" {
   interface Session {
-    user: {
+    user: DefaultSession["user"] & {
       role: UserRole;
       id: string;
       website?: string | null;
-    } & DefaultSession["user"];
+    };
   }
 }
 
@@ -37,12 +38,14 @@ export const authOptions = {
             id: true,
             role: true,
             website: true,
+            name: true,
           },
         });
         
         if (dbUser) {
-          session.user.role = dbUser.role;
+          session.user.role = dbUser.role as UserRole;
           session.user.website = dbUser.website;
+          session.user.name = dbUser.name;
         }
       }
       return session;

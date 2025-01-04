@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { SetupProfileModal } from "@/components/modals/setup-profile-modal";
 
 export const metadata = constructMetadata({
   title: "Codelumus Dashboard",
@@ -12,6 +13,26 @@ export const metadata = constructMetadata({
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
+  
+  // Debug log
+  console.log("Dashboard user data:", {
+    id: user?.id,
+    name: user?.name,
+    website: user?.website,
+  });
+
+  // Fetch fresh data directly from database
+  const dbUser = user ? await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      name: true,
+      website: true,
+    }
+  }) : null;
+
+  // Debug log
+  console.log("Fresh DB user data:", dbUser);
 
   const updates = await (prisma as any).adminUpdate.findMany({
     orderBy: {
@@ -33,6 +54,7 @@ export default async function DashboardPage() {
         heading="Dashboard"
         text="Welcome to Codelumus"
       />
+      {user && <SetupProfileModal name={dbUser?.name} website={dbUser?.website} />}
       <div className="grid gap-4">
         {updates.length > 0 ? (
           updates.map((update) => (
