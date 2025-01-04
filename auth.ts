@@ -42,9 +42,6 @@ export const {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email },
           include: { accounts: true }
-        }).catch(err => {
-          console.error("Database query error:", err);
-          return null;
         });
 
         // Check for pending invitation
@@ -55,39 +52,30 @@ export const {
           }
         });
 
-        // Only allow sign in if user exists in database OR has a pending invitation
+        console.log("Sign-in attempt:", {
+          email: user.email,
+          existingUser: !!existingUser,
+          pendingInvitation: !!pendingInvitation,
+          provider: account?.provider
+        });
+
+        // If user doesn't exist and has no invitation, reject sign in
         if (!existingUser && !pendingInvitation) {
-          console.log("Sign-in rejected: User not in allowed users list and no pending invitation");
+          console.log("Sign-in rejected: No user record or invitation found");
           return false;
         }
 
-        // If signing in with Google and user exists
-        if (account?.provider === "google") {
-          try {
-            // If user doesn't exist but has invitation, create the user
-            if (!existingUser && pendingInvitation) {
-              const newUser = await prisma.user.create({
-                data: {
-                  email: user.email,
-                  name: profile?.name || user.name,
-                  image: profile?.picture,
-                  role: "USER"
-                }
-              });
-              console.log("Created new user from invitation:", newUser);
-            }
-
-            // If user exists, check if Google account is already linked
-            if (existingUser) {
-              const hasGoogleAccount = existingUser.accounts.some(
-                acc => acc.provider === "google"
-              );
-
-              if (!hasGoogleAccount) {
-                // Link Google account to existing user
-                await prisma.account.create({
-                  data: {
-                    userId: existingUser.id,
+        try {
+          // If user doesn't exist but has invitation, create the user
+          if (!existingUser && pendingInvitation) {
+            await prisma.user.create({
+              data: {
+                email: user.email,
+                name: profile?.name || user.name,
+                image: profile?.picture,
+                role: UserRole.USER,
+                accounts: account ? {
+                  create: {
                     type: account.type,
                     provider: account.provider,
                     providerAccountId: account.providerAccountId,
@@ -97,36 +85,61 @@ export const {
                     id_token: account.id_token,
                     expires_at: account.expires_at
                   }
-                });
+                } : undefined
               }
+            });
+            console.log("Created new user from invitation");
+          }
 
-              // Update user information
+          // If user exists but doesn't have this provider linked
+          if (existingUser && account) {
+            const hasProvider = existingUser.accounts.some(
+              acc => acc.provider === account.provider
+            );
+
+            if (!hasProvider) {
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  expires_at: account.expires_at
+                }
+              });
+              console.log("Linked new provider to existing user");
+            }
+
+            // Update user information if needed
+            if (profile?.picture || profile?.name) {
               await prisma.user.update({
                 where: { id: existingUser.id },
                 data: { 
-                  image: profile?.picture,
-                  name: profile?.name || user.name
+                  image: profile.picture,
+                  name: profile.name || user.name
                 }
               });
             }
-
-            // If there's a pending invitation, update it to ACCEPTED
-            if (pendingInvitation) {
-              await prisma.invitation.update({
-                where: { id: pendingInvitation.id },
-                data: { status: "ACCEPTED" }
-              });
-              console.log('Updated invitation status to ACCEPTED for:', user.email);
-            }
-
-            return true;
-          } catch (dbError) {
-            console.error("Database operation failed:", dbError);
-            return false;
           }
-        }
 
-        return true;
+          // Update invitation status if exists
+          if (pendingInvitation) {
+            await prisma.invitation.update({
+              where: { id: pendingInvitation.id },
+              data: { status: "ACCEPTED" }
+            });
+            console.log("Updated invitation status to ACCEPTED");
+          }
+
+          return true;
+        } catch (dbError) {
+          console.error("Database operation failed:", dbError);
+          return false;
+        }
       } catch (error) {
         console.error("Sign in error:", error);
         return false;
