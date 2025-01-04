@@ -21,6 +21,7 @@ import { Icons } from "../shared/icons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import { useEffect } from "react";
+import { Phone, MessageSquare } from "lucide-react";
 
 const formSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
@@ -188,6 +189,41 @@ export function SupportForm() {
           )}
         </CardContent>
       </Card>
+
+      <div className="md:col-span-2 mt-8 rounded-lg border bg-card p-6">
+        <h3 className="text-lg font-semibold mb-4">Need Immediate Assistance?</h3>
+        <p className="text-muted-foreground mb-6">
+          For faster response, you can reach out directly through phone or WhatsApp. Don't forget to include screenshots or images to help explain your needs better.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <a
+            href="tel:+14013476461"
+            className="flex flex-1 items-center justify-center gap-3 px-6 py-3 rounded-lg border bg-background hover:bg-accent/50 hover:border-primary/50 transition-all duration-200"
+          >
+            <div className="flex items-center justify-center size-8 rounded-full bg-primary/10">
+              <Phone className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Call Us</span>
+              <span className="font-medium">+1 (401) 347-6461</span>
+            </div>
+          </a>
+          <a
+            href="https://wa.me/14013476461?text=Hi,%20I%20need%20help%20with%20my%20website.%20Here%20are%20some%20details%20about%20my%20request:"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-1 items-center justify-center gap-3 px-6 py-3 rounded-lg border bg-background hover:bg-[#25D366]/10 hover:border-[#25D366]/50 transition-all duration-200"
+          >
+            <div className="flex items-center justify-center size-8 rounded-full bg-[#25D366]/10">
+              <MessageSquare className="h-4 w-4 text-[#25D366]" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Chat with Us</span>
+              <span className="font-medium">WhatsApp Support</span>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   );
 } 

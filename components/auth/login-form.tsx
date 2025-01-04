@@ -17,7 +17,7 @@ export function LoginForm() {
       const response = await fetch("/api/auth/check-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: email.toLowerCase() })
       });
 
       if (!response.ok) {
@@ -40,7 +40,7 @@ export function LoginForm() {
 
     try {
       setIsChecking(true);
-      const isAllowed = await checkEmail(email);
+      const isAllowed = await checkEmail(email.toLowerCase());
 
       if (!isAllowed) {
         toast.error("This email is not allowed to sign in. Please request an invitation.");
@@ -49,7 +49,7 @@ export function LoginForm() {
 
       setIsLoading(true);
       const result = await signIn("credentials", {
-        email,
+        email: email.toLowerCase(),
         redirect: false,
         callbackUrl: "/dashboard"
       });
@@ -95,7 +95,7 @@ export function LoginForm() {
           autoCorrect="off"
           disabled={isLoading || isChecking}
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.toLowerCase())}
           className="h-11"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !isLoading && !isChecking) {

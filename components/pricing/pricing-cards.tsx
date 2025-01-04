@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { useSession } from "next-auth/react";
 import { Check, Star, ShoppingCart, Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
+import { useInView } from "react-intersection-observer";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,21 +32,63 @@ interface PricingCardsProps {
   redirect?: string;
 }
 
-const AnimatedPrice = ({ value, className = "text-6xl" }: { value: number, className?: string }) => (
-  <motion.span
-    key={value}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.2 }}
-    className={`${className} font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80`}
-  >
-    ${value}
-  </motion.span>
-);
+// Dynamically import heavy components
+const DynamicComparePlans = dynamic(() => import("@/components/pricing/compare-plans").then(mod => ({ default: mod.ComparePlans })), {
+  ssr: false,
+  loading: () => <div className="h-[200px]" /> // Placeholder height
+});
 
-// Keep the original public view
-const PublicPricingView = ({ 
+const DynamicPricingFaq = dynamic(() => import("@/components/pricing/pricing-faq").then(mod => ({ default: mod.PricingFaq })), {
+  ssr: false,
+  loading: () => <div className="h-[200px]" />
+});
+
+// Memoize the AnimatedPrice component
+const AnimatedPrice = memo(({ value, className = "text-6xl" }: { value: number, className?: string }) => {
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  return (
+    <div ref={ref}>
+      {inView && (
+        <motion.span
+          key={value}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+          className={`${className} font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80`}
+        >
+          ${value}
+        </motion.span>
+      )}
+    </div>
+  );
+});
+AnimatedPrice.displayName = "AnimatedPrice";
+
+// Define defaultPlan
+const defaultPlan: UserSubscriptionPlan = {
+  title: pricingData[0].title,
+  description: pricingData[0].description,
+  benefits: pricingData[0].benefits,
+  limitations: pricingData[0].limitations,
+  prices: pricingData[0].prices,
+  stripeIds: pricingData[0].stripeIds,
+  stripePriceId: "",
+  stripeSubscriptionId: "",
+  stripeCustomerId: "",
+  stripeCurrentPeriodEnd: Date.now(),
+  isPaid: false,
+  interval: null,
+  isCanceled: false,
+  activeAddons: []
+};
+
+// Optimize the PublicPricingView
+const PublicPricingView = memo(({ 
   frequency, 
   setFrequency, 
   setShowSignInModal 
@@ -53,8 +97,12 @@ const PublicPricingView = ({
   setFrequency: (value: "monthly" | "yearly") => void;
   setShowSignInModal: () => void;
 }) => {
-  const plan = pricingData[0];
+  const plan = useMemo(() => pricingData[0], []);
   
+  const handleFrequencyChange = useCallback((value: string) => {
+    value && setFrequency(value as "monthly" | "yearly");
+  }, [setFrequency]);
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-4">
@@ -70,7 +118,7 @@ const PublicPricingView = ({
         <ToggleGroup
           type="single"
           value={frequency}
-          onValueChange={(value) => value && setFrequency(value as "monthly" | "yearly")}
+          onValueChange={handleFrequencyChange}
           className="bg-muted/50 p-1 rounded-lg"
         >
           {frequencies.map((freq) => (
@@ -144,22 +192,26 @@ const PublicPricingView = ({
       <div className="mt-24">
         <h3 className="text-xl font-semibold text-center mb-8">All Plans Include</h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {includedFeatures.map((feature, index) => (
-            <Card key={index} className="p-6 text-center bg-muted/50 border-none">
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Check className="h-5 w-5 text-primary" />
-              </div>
-              <p className="font-medium text-sm">{feature}</p>
-            </Card>
-          ))}
+          {useMemo(() => 
+            includedFeatures.map((feature, index) => (
+              <Card key={index} className="p-6 text-center bg-muted/50 border-none">
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <p className="font-medium text-sm">{feature}</p>
+              </Card>
+            )),
+            []
+          )}
         </div>
       </div>
     </div>
   );
-};
+});
+PublicPricingView.displayName = "PublicPricingView";
 
-// Component for authenticated users
-const AuthenticatedPricingView = ({
+// Optimize the AuthenticatedPricingView similarly
+const AuthenticatedPricingView = memo(({
   frequency,
   setFrequency,
   subscriptionPlan,
@@ -174,17 +226,11 @@ const AuthenticatedPricingView = ({
   setSelectedAddons: React.Dispatch<React.SetStateAction<AddOn[]>>;
   isLoadingSubscription: boolean;
 }) => {
-  // Add detailed logging
-  console.log("AuthenticatedPricingView - Full subscription plan:", subscriptionPlan);
-  
-  const handleAddonSelect = (addon: AddOn) => {
-    console.log("handleAddonSelect - Subscription state:", {
-      isPaid: subscriptionPlan.isPaid,
-      isCanceled: subscriptionPlan.isCanceled,
-      activeAddons: subscriptionPlan.activeAddons
-    });
+  const handleFrequencyChange = useCallback((value: string) => {
+    value && setFrequency(value as "monthly" | "yearly");
+  }, [setFrequency]);
 
-    // Remove the subscription check temporarily to debug button behavior
+  const handleAddonSelect = useCallback((addon: AddOn) => {
     setSelectedAddons(current => {
       const isSelected = current.some(a => a.id === addon.id);
       if (isSelected) {
@@ -193,14 +239,18 @@ const AuthenticatedPricingView = ({
         return [...current, addon];
       }
     });
-  };
+  }, [setSelectedAddons]);
 
-  const availableAddons = addOns.filter(
-    addon => !subscriptionPlan.activeAddons?.includes(addon.id)
+  const availableAddons = useMemo(() => 
+    addOns.filter(addon => !subscriptionPlan.activeAddons?.includes(addon.id)),
+    [subscriptionPlan.activeAddons]
   );
 
-  const totalPrice = selectedAddons.reduce((sum, addon) => 
-    sum + (frequency === "monthly" ? addon.price.monthly : addon.price.yearly), 0
+  const totalPrice = useMemo(() => 
+    selectedAddons.reduce((sum, addon) => 
+      sum + (frequency === "monthly" ? addon.price.monthly : addon.price.yearly), 0
+    ),
+    [selectedAddons, frequency]
   );
 
   if (isLoadingSubscription) {
@@ -233,7 +283,7 @@ const AuthenticatedPricingView = ({
         <ToggleGroup
           type="single"
           value={frequency}
-          onValueChange={(value) => value && setFrequency(value as "monthly" | "yearly")}
+          onValueChange={handleFrequencyChange}
           className="bg-muted/50 p-1 rounded-lg"
         >
           {frequencies.map((freq) => (
@@ -344,7 +394,8 @@ const AuthenticatedPricingView = ({
       )}
     </div>
   );
-};
+});
+AuthenticatedPricingView.displayName = "AuthenticatedPricingView";
 
 export function PricingCards({ redirect }: PricingCardsProps) {
   const [frequency, setFrequency] = useState<"monthly" | "yearly">("monthly");
@@ -353,35 +404,15 @@ export function PricingCards({ redirect }: PricingCardsProps) {
   const { setShowSignInModal } = useModal();
   const { subscriptionPlan: fetchedPlan, isLoading: isLoadingSubscription } = useSubscriptionPlan();
 
-  // Add more detailed logging
-  console.log("PricingCards - Raw fetched plan:", fetchedPlan);
-  
-  const defaultPlan: UserSubscriptionPlan = {
-    title: pricingData[0].title,
-    description: pricingData[0].description,
-    benefits: pricingData[0].benefits,
-    limitations: pricingData[0].limitations,
-    prices: pricingData[0].prices,
-    stripeIds: pricingData[0].stripeIds,
-    stripePriceId: "",
-    stripeSubscriptionId: "",
-    stripeCustomerId: "",
-    stripeCurrentPeriodEnd: Date.now(),
-    isPaid: false,
-    interval: null,
-    isCanceled: false,
-    activeAddons: []
-  };
-
-  // Ensure the fetched plan matches the UserSubscriptionPlan type
-  const subscriptionPlan: UserSubscriptionPlan = fetchedPlan ? {
-    ...fetchedPlan,
-    stripeCurrentPeriodEnd: fetchedPlan.stripeCurrentPeriodEnd || Date.now(),
-    activeAddons: fetchedPlan.activeAddons || [],
-    isPaid: Boolean(fetchedPlan.stripeSubscriptionId && !fetchedPlan.isCanceled)
-  } : defaultPlan;
-
-  console.log("PricingCards - Processed subscription plan:", subscriptionPlan);
+  const subscriptionPlan = useMemo(() => {
+    if (!fetchedPlan) return defaultPlan;
+    return {
+      ...fetchedPlan,
+      stripeCurrentPeriodEnd: fetchedPlan.stripeCurrentPeriodEnd || Date.now(),
+      activeAddons: fetchedPlan.activeAddons || [],
+      isPaid: Boolean(fetchedPlan.stripeSubscriptionId && !fetchedPlan.isCanceled)
+    };
+  }, [fetchedPlan]);
 
   if (session && isLoadingSubscription) {
     return (
@@ -409,6 +440,10 @@ export function PricingCards({ redirect }: PricingCardsProps) {
           isLoadingSubscription={isLoadingSubscription}
         />
       )}
+
+      {/* Dynamically load heavy components */}
+      <DynamicComparePlans />
+      <DynamicPricingFaq />
     </div>
   );
 }

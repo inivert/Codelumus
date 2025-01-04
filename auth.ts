@@ -38,22 +38,24 @@ export const {
           return false;
         }
 
+        const normalizedEmail = user.email.toLowerCase();
+
         // Check if user exists in database
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
+          where: { email: normalizedEmail },
           include: { accounts: true }
         });
 
         // Check for pending invitation
         const pendingInvitation = await prisma.invitation.findFirst({
           where: {
-            email: user.email,
+            email: normalizedEmail,
             status: "PENDING"
           }
         });
 
         console.log("Sign-in attempt:", {
-          email: user.email,
+          email: normalizedEmail,
           existingUser: !!existingUser,
           pendingInvitation: !!pendingInvitation,
           provider: account?.provider
@@ -70,7 +72,7 @@ export const {
           if (!existingUser && pendingInvitation) {
             await prisma.user.create({
               data: {
-                email: user.email,
+                email: normalizedEmail,
                 name: profile?.name || user.name,
                 image: profile?.picture,
                 role: UserRole.USER,

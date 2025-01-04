@@ -14,7 +14,7 @@ export function InvitationForm() {
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
-    const email = formData.get("email") as string;
+    const email = (formData.get("email") as string)?.toLowerCase();
     
     if (!email) {
       toast.error("Please enter an email address");
@@ -60,6 +60,7 @@ export function InvitationForm() {
                 type="email"
                 className="pl-10"
                 required
+                onChange={(e) => e.target.value = e.target.value.toLowerCase()}
               />
             </div>
             <Button type="submit" size="icon" disabled={isPending}>
