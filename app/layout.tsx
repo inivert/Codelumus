@@ -10,6 +10,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import AuthProvider from "@/components/providers/session-provider";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: {
@@ -46,6 +47,12 @@ export default function RootLayout({
         <link rel="icon" href="/icon.png" type="image/png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="bd3024d9-a6cc-425a-819a-b0229bd3b608"
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={cn(
