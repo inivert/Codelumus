@@ -1,10 +1,11 @@
 import { headers } from "next/headers";
-import Stripe from "stripe";
-
+import { NextResponse } from "next/server";
 import { env } from "@/env.mjs";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import Stripe from "stripe";
 
+// Stripe requires the raw body to construct the event.
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get("Stripe-Signature") as string;
@@ -35,10 +36,25 @@ export async function POST(req: Request) {
       // Retrieve the subscription details from Stripe.
       const subscription = await stripe.subscriptions.retrieve(
         session.subscription as string,
+        {
+          expand: ['items.data.price.product']
+        }
       );
+
+      // Find the main plan price ID (the first non-addon item)
+      const mainPriceId = subscription.items.data.find(
+        item => !item.price.product.metadata.type
+      )?.price.id;
+
+      // Get all addon IDs
+      const addonIds = subscription.items.data
+        .filter(item => item.price.product.metadata.type === 'addon')
+        .map(item => item.price.product.metadata.addonId);
+
       console.log("Subscription details:", {
         subscriptionId: subscription.id,
-        priceId: subscription.items.data[0].price.id,
+        mainPriceId,
+        addonIds,
         periodEnd: new Date(subscription.current_period_end * 1000)
       });
 
@@ -50,16 +66,18 @@ export async function POST(req: Request) {
         data: {
           stripeSubscriptionId: subscription.id,
           stripeCustomerId: subscription.customer as string,
-          stripePriceId: subscription.items.data[0].price.id,
+          stripePriceId: mainPriceId,
           stripeCurrentPeriodEnd: new Date(
             subscription.current_period_end * 1000,
           ),
+          activeAddons: addonIds,
         },
       });
       console.log("User updated with subscription data:", {
         userId: updatedUser.id,
         subscriptionId: updatedUser.stripeSubscriptionId,
-        priceId: updatedUser.stripePriceId
+        priceId: updatedUser.stripePriceId,
+        addons: updatedUser.activeAddons
       });
     }
 
@@ -76,10 +94,25 @@ export async function POST(req: Request) {
         // Retrieve the subscription details from Stripe.
         const subscription = await stripe.subscriptions.retrieve(
           session.subscription as string,
+          {
+            expand: ['items.data.price.product']
+          }
         );
+
+        // Find the main plan price ID (the first non-addon item)
+        const mainPriceId = subscription.items.data.find(
+          item => !item.price.product.metadata.type
+        )?.price.id;
+
+        // Get all addon IDs
+        const addonIds = subscription.items.data
+          .filter(item => item.price.product.metadata.type === 'addon')
+          .map(item => item.price.product.metadata.addonId);
+
         console.log("Updated subscription details:", {
           subscriptionId: subscription.id,
-          priceId: subscription.items.data[0].price.id,
+          mainPriceId,
+          addonIds,
           periodEnd: new Date(subscription.current_period_end * 1000)
         });
 
@@ -89,16 +122,18 @@ export async function POST(req: Request) {
             stripeSubscriptionId: subscription.id,
           },
           data: {
-            stripePriceId: subscription.items.data[0].price.id,
+            stripePriceId: mainPriceId,
             stripeCurrentPeriodEnd: new Date(
               subscription.current_period_end * 1000,
             ),
+            activeAddons: addonIds,
           },
         });
         console.log("User updated after subscription change:", {
           userId: updatedUser.id,
           subscriptionId: updatedUser.stripeSubscriptionId,
-          priceId: updatedUser.stripePriceId
+          priceId: updatedUser.stripePriceId,
+          addons: updatedUser.activeAddons
         });
       }
     }

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Icons } from "@/components/shared/icons";
 import { useSession } from "next-auth/react";
+import { UpgradeCard } from "@/components/dashboard/upgrade-card";
 
 interface DashboardSidebarProps {
   links: SidebarNavItem[];

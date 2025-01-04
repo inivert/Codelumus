@@ -55,6 +55,7 @@ model User {
   stripeSubscriptionId   String?          @unique @map("stripe_subscription_id") @db.VarChar(191)
   stripePriceId          String?          @map("stripe_price_id") @db.VarChar(191)
   stripeCurrentPeriodEnd DateTime?        @map("stripe_current_period_end")
+  activeAddons           String[]         @default([])
   accounts               Account[]
   adminUpdates           AdminUpdate[]
   sentInvitations        Invitation[]     @relation("inviter")

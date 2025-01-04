@@ -93,21 +93,83 @@ export function BillingInfo({ initialData }: BillingInfoProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {plan.isPaid ? (
-          // Show subscription details for paid users
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {plan.isCanceled ? (
-                <p>Your subscription will end on {new Date(plan.stripeCurrentPeriodEnd!).toLocaleDateString()}</p>
-              ) : (
-                <p>Next billing date: {new Date(plan.stripeCurrentPeriodEnd!).toLocaleDateString()}</p>
-              )}
+          <>
+            {/* Base Plan Details */}
+            <div className="rounded-lg border bg-card p-6">
+              <h3 className="font-semibold mb-4">Base Plan Details</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Billing Period</span>
+                  <span className="font-medium capitalize">{plan.interval}ly</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Next Payment</span>
+                  <span className="font-medium">
+                    {new Date(plan.stripeCurrentPeriodEnd!).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-medium">
+                    ${plan.interval === "month" ? plan.prices.monthly : plan.prices.yearly}/{plan.interval}ly
+                  </span>
+                </div>
+              </div>
             </div>
-            <CustomerPortalButton size="sm">
-              {plan.isCanceled ? "Renew Subscription" : "Manage Plan"}
-            </CustomerPortalButton>
-          </div>
+
+            {/* Active Add-ons */}
+            {plan.activeAddons && plan.activeAddons.length > 0 && (
+              <div className="rounded-lg border bg-card p-6">
+                <h3 className="font-semibold mb-4">Active Add-ons</h3>
+                <div className="space-y-6">
+                  {plan.activeAddons.map((addonId) => {
+                    const addon = addOns.find(a => a.id === addonId);
+                    if (!addon) return null;
+                    return (
+                      <div key={addon.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">{addon.title}</h4>
+                          <span className="text-sm text-muted-foreground">
+                            ${plan.interval === "month" ? addon.price.monthly : addon.price.yearly}/{plan.interval}ly
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{addon.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Total Cost */}
+            <div className="rounded-lg border bg-card p-6">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Total Monthly Cost</span>
+                <span className="text-xl font-bold">
+                  ${plan.interval === "month" 
+                    ? plan.prices.monthly + plan.activeAddons.reduce((sum, addonId) => {
+                        const addon = addOns.find(a => a.id === addonId);
+                        return sum + (addon?.price.monthly || 0);
+                      }, 0)
+                    : plan.prices.yearly + plan.activeAddons.reduce((sum, addonId) => {
+                        const addon = addOns.find(a => a.id === addonId);
+                        return sum + (addon?.price.yearly || 0);
+                      }, 0)
+                  }/{plan.interval}ly
+                </span>
+              </div>
+            </div>
+
+            {/* Manage Subscription Button */}
+            <div className="mt-4">
+              <CustomerPortalButton className="w-full" />
+              <p className="mt-2 text-xs text-muted-foreground text-center">
+                Manage your subscription in the Stripe Customer Portal
+              </p>
+            </div>
+          </>
         ) : (
-          // Show upgrade button for free users
+          // Show upgrade section for free users
           <div className="space-y-6">
             <div className="rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8">
               <div className="space-y-2">
@@ -158,37 +220,6 @@ export function BillingInfo({ initialData }: BillingInfoProps) {
                   <span>SEO optimization and analytics integration</span>
                 </li>
               </ul>
-            </div>
-          </div>
-        )}
-
-        {plan.activeAddons && plan.activeAddons.length > 0 && (
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold">Active Add-ons</h3>
-            <div className="mt-4 space-y-4">
-              {plan.activeAddons.map((addonId) => {
-                const addon = addOns.find(a => a.id === addonId);
-                if (!addon) return null;
-                return (
-                  <div key={addon.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">{addon.title}</h4>
-                      <span className="text-sm text-muted-foreground">
-                        ${plan.interval === "month" ? addon.price.monthly : addon.price.yearly}/{plan.interval}ly
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{addon.description}</p>
-                    <ul className="mt-2 grid gap-1">
-                      {addon.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Icons.check className="size-4 text-primary" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
             </div>
           </div>
         )}

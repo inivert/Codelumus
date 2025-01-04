@@ -66,6 +66,7 @@ export type UserSubscriptionPlan = SubscriptionPlan &
     isPaid: boolean;
     interval: "month" | "year" | null;
     isCanceled?: boolean;
+    activeAddons: string[];
   };
 
 // compare plans

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { auth } from "@/lib/auth";
 
-import { authOptions } from "@/lib/auth";
 import { sendInvitationEmail } from "@/lib/invitation";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     // Check if user is authenticated and is an admin
     if (!session?.user || session.user.role !== "ADMIN") {
