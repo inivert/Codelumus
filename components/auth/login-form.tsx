@@ -20,6 +20,10 @@ export function LoginForm() {
         body: JSON.stringify({ email })
       });
 
+      if (!response.ok) {
+        throw new Error("Failed to check email");
+      }
+
       const data = await response.json();
       return data.isAllowed;
     } catch (error) {
@@ -51,11 +55,13 @@ export function LoginForm() {
       });
 
       if (result?.error) {
+        console.error("Sign-in error:", result.error);
         toast.error("Failed to sign in. Please try again.");
-      } else {
-        window.location.href = "/dashboard";
+      } else if (result?.url) {
+        window.location.href = result.url;
       }
     } catch (error) {
+      console.error("Sign-in error:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsChecking(false);
@@ -71,7 +77,8 @@ export function LoginForm() {
         redirect: true
       });
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      console.error("Google sign-in error:", error);
+      toast.error("Something went wrong with Google sign-in. Please try again.");
       setIsLoading(false);
     }
   };
@@ -90,6 +97,11 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="h-11"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !isLoading && !isChecking) {
+              handleEmailSignIn();
+            }
+          }}
         />
       </div>
       <Button

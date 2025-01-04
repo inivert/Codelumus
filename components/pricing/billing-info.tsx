@@ -23,6 +23,8 @@ import { pricingData, addOns } from "@/config/subscriptions";
 import { UserSubscriptionPlan } from "@/types";
 import { toast } from "sonner";
 import { AddonManager } from "@/components/pricing/addon-manager";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Info } from "lucide-react";
 
 const defaultPlan = {
   ...pricingData[0],
@@ -81,18 +83,37 @@ export function BillingInfo({ initialData }: BillingInfoProps) {
             </CardDescription>
           </div>
           <div className={cn(
-            "rounded-full px-3 py-1 text-sm font-medium",
+            "rounded-full px-3.5 py-1 text-sm inline-flex items-center whitespace-nowrap",
             plan.isPaid 
               ? plan.isCanceled 
-                ? "bg-yellow-100 text-yellow-700" 
-                : "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-700"
+                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400" 
+                : "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400"
+              : "bg-white text-zinc-950 font-medium"
           )}>
             {plan.isPaid ? (plan.isCanceled ? "Canceled" : "Active") : "Free Plan"}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-6">
+      <CardContent className="flex flex-1 flex-col gap-6">
+        {/* Important Messages */}
+        <div className="space-y-4">
+          <Alert className="border-primary bg-primary/10">
+            <Info className="h-4 w-4 text-primary" />
+            <AlertTitle className="font-medium">Let's Discuss Your Website</AlertTitle>
+            <AlertDescription className="mt-1">
+              As your dedicated web developer, I'd love to discuss which add-ons would work best for your website. Let's work together to find the perfect solutions for your needs.
+            </AlertDescription>
+          </Alert>
+
+          <Alert className="border-yellow-600 bg-yellow-500/10">
+            <AlertCircle className="h-4 w-4 text-yellow-600" />
+            <AlertTitle className="font-medium">Billing Information</AlertTitle>
+            <AlertDescription className="mt-1">
+              I believe in delivering value first. You'll only start your subscription after I've completed your website to your satisfaction. This ensures you get exactly what you're paying for.
+            </AlertDescription>
+          </Alert>
+        </div>
+
         {plan.isPaid ? (
           <>
             {/* Base Plan Details */}

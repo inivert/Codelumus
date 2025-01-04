@@ -3,12 +3,30 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { getCurrentUser } from "@/lib/session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnalyticsButton } from "@/components/analytics/analytics-button";
+import { prisma } from "@/lib/db";
 
 export default async function AnalyticsPage() {
   const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Fetch full user data to get role and analytics URL
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { 
+      role: true,
+      analytics: {
+        select: {
+          umamiUrl: true
+        }
+      }
+    }
+  });
+
+  if (!dbUser || dbUser.role !== 'ADMIN') {
+    redirect("/dashboard");
   }
 
   return (
@@ -26,7 +44,7 @@ export default async function AnalyticsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center py-6">
-            <AnalyticsButton />
+            <AnalyticsButton analyticsUrl={dbUser.analytics?.umamiUrl} />
           </CardContent>
         </Card>
       </div>

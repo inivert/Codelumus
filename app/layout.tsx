@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     template: "%s | Codelumus",
   },
   description: "Learn to code with interactive tutorials and challenges",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   icons: {
     icon: [
       {

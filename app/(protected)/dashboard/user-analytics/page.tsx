@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { RefreshButton } from "@/components/analytics/refresh-button";
 import { AnalyticsButton } from "@/components/analytics/analytics-button";
 import { prisma } from "@/lib/db";
+import { Info } from "lucide-react";
 
 export const metadata = constructMetadata({
   title: "Website Analytics",
@@ -38,6 +39,17 @@ export default async function UserAnalyticsPage() {
           text="Monitor your website performance and user engagement"
         />
         <div className="flex-1 p-4 md:p-8 space-y-6">
+          {/* Important Messages */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            <Alert className="border-primary bg-primary/10">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertTitle className="font-medium">Website Add-ons</AlertTitle>
+              <AlertDescription className="mt-1">
+                Want to enhance your website with additional features? Please reach out to discuss which add-ons would best suit your needs. We'll help you make the right choice for your business.
+              </AlertDescription>
+            </Alert>
+          </div>
+
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <div className="flex items-center justify-between">

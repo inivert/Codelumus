@@ -1,15 +1,14 @@
+import { Metadata } from "next";
 import { getCurrentUser } from "@/lib/session";
-import { constructMetadata } from "@/lib/utils";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
-import { Prisma } from "@prisma/client";
 import { SetupProfileModal } from "@/components/modals/setup-profile-modal";
 
-export const metadata = constructMetadata({
-  title: "Codelumus Dashboard",
+export const metadata: Metadata = {
+  title: "Dashboard | Codelumus",
   description: "Manage your Codelumus account and content.",
-});
+};
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -34,7 +33,8 @@ export default async function DashboardPage() {
   // Debug log
   console.log("Fresh DB user data:", dbUser);
 
-  const updates = await (prisma as any).adminUpdate.findMany({
+  // Fetch all updates
+  const updates = user ? await prisma.adminUpdate.findMany({
     orderBy: {
       createdAt: 'desc'
     },
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       },
     },
     take: 5, // Only show the 5 most recent updates
-  });
+  }) : [];
 
   return (
     <div className="container space-y-8">
