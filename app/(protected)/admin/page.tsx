@@ -1,268 +1,217 @@
 import { redirect } from "next/navigation";
-import { DollarSign, Users, CreditCard, TrendingUp } from "lucide-react";
-
 import { getCurrentUser } from "@/lib/session";
-import { constructMetadata } from "@/lib/utils";
+import { prisma } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
+import { DataTable } from "@/components/admin/data-table";
+import { columns } from "@/components/admin/columns";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getStripeStats, getRecentTransactions, getSubscribedUsers } from "@/lib/admin";
+import { addOns, pricingData } from "@/config/subscriptions";
 import { formatDate } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { getUserSubscriptionPlan } from "@/lib/subscription";
 
-export const metadata = constructMetadata({
-  title: "Admin",
-  description: "Admin page for only admin management.",
-});
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'active':
-      return 'default';
-    case 'canceled':
-      return 'destructive';
-    case 'trialing':
-      return 'warning';
-    case 'past_due':
-      return 'destructive';
-    default:
-      return 'secondary';
+async function getSubscriptionData(stripeSubscriptionId: string | null) {
+  if (!stripeSubscriptionId) return null;
+
+  try {
+    return await stripe.subscriptions.retrieve(stripeSubscriptionId, {
+      expand: ['items.data.price.product']
+    });
+  } catch (error) {
+    console.error("Error fetching subscription:", error);
+    return null;
   }
 }
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") redirect("/login");
 
-  const stats = await getStripeStats();
-  const transactions = await getRecentTransactions();
-  const subscribers = await getSubscribedUsers();
+  if (!user || user.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  // Get all users with their subscription data
+  const users = await prisma.user.findMany({
+    where: {
+      role: {
+        not: "ADMIN"
+      }
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      website: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
+      createdAt: true
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
+  });
+
+  // Fetch subscription details for each user directly from Stripe
+  const usersWithSubscriptions = await Promise.all(
+    users.map(async (user) => {
+      let stripeSubscription = null;
+      let subscriptionItems = [];
+      
+      if (user.stripeSubscriptionId) {
+        try {
+          // Get live subscription data from Stripe
+          stripeSubscription = await stripe.subscriptions.retrieve(
+            user.stripeSubscriptionId,
+            {
+              expand: ['items.data.price.product', 'items.data.price']
+            }
+          );
+          
+          subscriptionItems = stripeSubscription.items.data;
+        } catch (error) {
+          console.error(`Error fetching subscription for user ${user.id}:`, error);
+        }
+      }
+
+      // Get base plan and addons from Stripe data
+      const basePlanItem = subscriptionItems.find(
+        item => !item.price.product.metadata.type || item.price.product.metadata.type !== 'addon'
+      );
+      const addonItems = subscriptionItems.filter(
+        item => item.price.product.metadata.type === 'addon'
+      );
+
+      // Calculate costs directly from Stripe prices
+      const baseAmount = basePlanItem ? basePlanItem.price.unit_amount! / 100 : 0;
+      const addonsAmount = addonItems.reduce((sum, item) => 
+        sum + (item.price.unit_amount! / 100), 0
+      );
+
+      const totalCost = baseAmount + addonsAmount;
+      const interval = basePlanItem?.price.recurring?.interval || 'month';
+
+      // Get formatted addon names from Stripe metadata
+      const addonNames = addonItems.map(item => 
+        item.price.product.name || item.price.product.metadata.title || 'Unknown Addon'
+      );
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        status: stripeSubscription?.status || 'inactive',
+        subscriptionId: user.stripeSubscriptionId,
+        customerId: user.stripeCustomerId,
+        plan: basePlanItem?.price.product.name || 'No Plan',
+        website: user.website || 'No Website',
+        addons: addonNames,
+        interval: `${interval}ly`,
+        cost: totalCost,
+        periodEnd: stripeSubscription?.current_period_end 
+          ? new Date(stripeSubscription.current_period_end * 1000)
+          : null,
+        createdAt: user.createdAt,
+      };
+    })
+  );
+
+  // Calculate summary statistics using live Stripe data
+  const stats = {
+    totalUsers: users.length,
+    activeSubscriptions: usersWithSubscriptions.filter(u => u.status === 'active').length,
+    totalMRR: usersWithSubscriptions.reduce((sum, user) => {
+      if (user.status !== 'active') return sum;
+      // Convert yearly costs to monthly for MRR
+      return sum + (user.interval === 'monthly' ? user.cost : user.cost / 12);
+    }, 0),
+    totalWebsites: users.filter(user => user.website).length,
+    // Calculate total yearly gains from active subscriptions using Stripe amounts
+    totalGains: usersWithSubscriptions.reduce((sum, user) => {
+      if (user.status !== 'active') return sum;
+      // Convert monthly costs to yearly for total gains
+      return sum + (user.interval === 'monthly' ? user.cost * 12 : user.cost);
+    }, 0),
+    // Calculate total yearly losses from canceled subscriptions using Stripe amounts
+    totalLosses: usersWithSubscriptions.reduce((sum, user) => {
+      if (user.status !== 'canceled') return sum;
+      // Convert monthly costs to yearly for total losses
+      return sum + (user.interval === 'monthly' ? user.cost * 12 : user.cost);
+    }, 0),
+  };
 
   return (
-    <div className="flex min-h-screen flex-col space-y-6">
+    <div className="flex flex-col gap-8">
       <DashboardHeader
-        heading="Admin Panel"
-        text="Access only for users with ADMIN role."
+        heading="Admin Dashboard"
+        text="Manage and monitor user subscriptions and websites."
       />
-      
-      <div className="flex flex-1 flex-col gap-5 p-4 md:p-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue (30d)</CardTitle>
-              <DollarSign className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats?.totalRevenue.toFixed(2) || '0.00'}</div>
-              <p className="text-xs text-muted-foreground">+{stats?.subscriptionGrowth.toFixed(1) || '0'}% from last month</p>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-              <CreditCard className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.activeSubscriptions || 0}</div>
-              <p className="text-xs text-muted-foreground">Active paying customers</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalCustomers || 0}</div>
-              <p className="text-xs text-muted-foreground">All registered users</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
-              <TrendingUp className="size-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+{stats?.subscriptionGrowth.toFixed(1) || '0'}%</div>
-              <p className="text-xs text-muted-foreground">Month over month</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] md:h-[500px]">
-              {/* Mobile View */}
-              <div className="grid gap-4 md:hidden">
-                {transactions.map((transaction) => (
-                  <Card key={transaction.id}>
-                    <CardContent className="grid gap-2 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium">{transaction.customer.name}</div>
-                        <Badge variant={transaction.status === 'succeeded' ? 'default' : 'destructive'}>
-                          {transaction.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {transaction.customer.email}
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{transaction.type}</span>
-                        <span className="font-medium">${transaction.amount.toFixed(2)}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatDate(transaction.created)}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Desktop View */}
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <div className="font-medium">{transaction.customer.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {transaction.customer.email}
-                          </div>
-                        </TableCell>
-                        <TableCell>{transaction.type}</TableCell>
-                        <TableCell>
-                          <Badge variant={transaction.status === 'succeeded' ? 'default' : 'destructive'}>
-                            {transaction.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(transaction.created)}</TableCell>
-                        <TableCell className="text-right">${transaction.amount.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
           </CardContent>
         </Card>
-
-        {/* Subscribed Users */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscribed Users</CardTitle>
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] md:h-[500px]">
-              {/* Mobile View */}
-              <div className="grid gap-4 md:hidden">
-                {subscribers.map((subscriber) => (
-                  <Card key={subscriber.id}>
-                    <CardContent className="grid gap-2 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium">{subscriber.name}</div>
-                        <Badge variant={getStatusColor(subscriber.status)}>
-                          {subscriber.status}
-                          {subscriber.cancelAtPeriodEnd && ' (Canceling)'}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {subscriber.email}
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Plan: </span>
-                        {subscriber.stripePriceId}
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium">Next Payment: </span>
-                        {formatDate(subscriber.stripeCurrentPeriodEnd)}
-                      </div>
-                      {(subscriber.cancelAt || subscriber.cancelAtPeriodEnd) && (
-                        <div className="text-sm text-muted-foreground">
-                          {subscriber.cancelAt
-                            ? `Cancels on ${formatDate(subscriber.cancelAt)}`
-                            : 'Cancels at period end'}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Desktop View */}
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Plan ID</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Next Payment</TableHead>
-                      <TableHead>Cancellation</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {subscribers.map((subscriber) => (
-                      <TableRow key={subscriber.id}>
-                        <TableCell>
-                          <div className="font-medium">{subscriber.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {subscriber.email}
-                          </div>
-                        </TableCell>
-                        <TableCell>{subscriber.stripePriceId}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusColor(subscriber.status)}>
-                            {subscriber.status}
-                            {subscriber.cancelAtPeriodEnd && ' (Canceling)'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(subscriber.stripeCurrentPeriodEnd)}</TableCell>
-                        <TableCell>
-                          {subscriber.cancelAt ? (
-                            <span className="text-sm text-muted-foreground">
-                              Cancels on {formatDate(subscriber.cancelAt)}
-                            </span>
-                          ) : subscriber.cancelAtPeriodEnd ? (
-                            <span className="text-sm text-muted-foreground">
-                              Cancels at period end
-                            </span>
-                          ) : null}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
+            <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Recurring Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${Math.round(stats.totalMRR)}</div>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Websites</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalWebsites}</div>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Yearly Gains</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">${Math.round(stats.totalGains)}</div>
+            <p className="text-xs text-muted-foreground mt-1">From active subscriptions</p>
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Yearly Losses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">${Math.round(stats.totalLosses)}</div>
+            <p className="text-xs text-muted-foreground mt-1">From canceled subscriptions</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Users Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Users & Subscriptions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable columns={columns} data={usersWithSubscriptions} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

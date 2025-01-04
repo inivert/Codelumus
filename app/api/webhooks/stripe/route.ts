@@ -1,146 +1,103 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { env } from "@/env.mjs";
-import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import Stripe from "stripe";
+import { prisma } from "@/lib/db";
 
-// Stripe requires the raw body to construct the event.
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get("Stripe-Signature") as string;
 
-  let event: Stripe.Event;
+  let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      env.STRIPE_WEBHOOK_SECRET,
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
-    console.log("Webhook event received:", event.type);
-  } catch (error) {
-    console.error("Error verifying webhook signature:", error);
-    return new Response(`Webhook Error: ${error.message}`, { status: 400 });
+  } catch (error: any) {
+    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
   }
 
-  try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log("Checkout session completed:", {
-        sessionId: session.id,
-        customerId: session.customer,
-        userId: session?.metadata?.userId
-      });
+  const session = event.data.object as any;
 
-      // Retrieve the subscription details from Stripe.
-      const subscription = await stripe.subscriptions.retrieve(
-        session.subscription as string,
-        {
-          expand: ['items.data.price.product']
-        }
-      );
+  if (event.type === "checkout.session.completed") {
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string,
+      {
+        expand: ["items.data.price"]
+      }
+    );
 
-      // Find the main plan price ID (the first non-addon item)
-      const mainPriceId = subscription.items.data.find(
-        item => !item.price.product.metadata.type
-      )?.price.id;
+    // Find the base subscription item
+    const baseSubscriptionItem = subscription.items.data.find(
+      (item: any) => !item.price.metadata.isAddon
+    );
 
-      // Get all addon IDs
-      const addonIds = subscription.items.data
-        .filter(item => item.price.product.metadata.type === 'addon')
-        .map(item => item.price.product.metadata.addonId);
+    if (!session?.metadata?.userId) {
+      return new NextResponse("User id is required", { status: 400 });
+    }
 
-      console.log("Subscription details:", {
-        subscriptionId: subscription.id,
-        mainPriceId,
-        addonIds,
-        periodEnd: new Date(subscription.current_period_end * 1000)
-      });
+    // Update user's subscription information
+    await prisma.user.update({
+      where: {
+        id: session.metadata.userId,
+      },
+      data: {
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        stripePriceId: baseSubscriptionItem?.price.id,
+        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        subscriptionStatus: subscription.status,
+      },
+    });
+  }
 
-      // Update the user stripe info in our database.
-      const updatedUser = await prisma.user.update({
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object as any;
+    const userId = subscription.metadata.userId;
+
+    if (userId) {
+      await prisma.user.update({
         where: {
-          id: session?.metadata?.userId,
+          id: userId,
         },
         data: {
-          stripeSubscriptionId: subscription.id,
-          stripeCustomerId: subscription.customer as string,
-          stripePriceId: mainPriceId,
-          stripeCurrentPeriodEnd: new Date(
-            subscription.current_period_end * 1000,
-          ),
-          activeAddons: addonIds,
+          stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          subscriptionStatus: subscription.status,
         },
       });
-      console.log("User updated with subscription data:", {
-        userId: updatedUser.id,
-        subscriptionId: updatedUser.stripeSubscriptionId,
-        priceId: updatedUser.stripePriceId,
-        addons: updatedUser.activeAddons
-      });
     }
-
-    if (event.type === "invoice.payment_succeeded") {
-      const session = event.data.object as Stripe.Invoice;
-      console.log("Invoice payment succeeded:", {
-        invoiceId: session.id,
-        subscriptionId: session.subscription,
-        customerId: session.customer
-      });
-
-      // If the billing reason is not subscription_create, it means the customer has updated their subscription.
-      if (session.billing_reason !== "subscription_create") {
-        // Retrieve the subscription details from Stripe.
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string,
-          {
-            expand: ['items.data.price.product']
-          }
-        );
-
-        // Find the main plan price ID (the first non-addon item)
-        const mainPriceId = subscription.items.data.find(
-          item => !item.price.product.metadata.type
-        )?.price.id;
-
-        // Get all addon IDs
-        const addonIds = subscription.items.data
-          .filter(item => item.price.product.metadata.type === 'addon')
-          .map(item => item.price.product.metadata.addonId);
-
-        console.log("Updated subscription details:", {
-          subscriptionId: subscription.id,
-          mainPriceId,
-          addonIds,
-          periodEnd: new Date(subscription.current_period_end * 1000)
-        });
-
-        // Update the price id and set the new period end.
-        const updatedUser = await prisma.user.update({
-          where: {
-            stripeSubscriptionId: subscription.id,
-          },
-          data: {
-            stripePriceId: mainPriceId,
-            stripeCurrentPeriodEnd: new Date(
-              subscription.current_period_end * 1000,
-            ),
-            activeAddons: addonIds,
-          },
-        });
-        console.log("User updated after subscription change:", {
-          userId: updatedUser.id,
-          subscriptionId: updatedUser.stripeSubscriptionId,
-          priceId: updatedUser.stripePriceId,
-          addons: updatedUser.activeAddons
-        });
-      }
-    }
-
-    return new Response(null, { status: 200 });
-  } catch (error) {
-    console.error("Error processing webhook:", error);
-    return new Response("Webhook handler failed", { status: 500 });
   }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as any;
+    const userId = subscription.metadata.userId;
+
+    if (userId) {
+      await prisma.user.update({
+        where: {
+          stripeSubscriptionId: subscription.id,
+        },
+        data: {
+          subscriptionStatus: "canceled",
+          stripePriceId: null,
+          stripeSubscriptionId: null,
+        },
+      });
+
+      // Deactivate all add-ons
+      await prisma.userAddon.updateMany({
+        where: {
+          userId: userId,
+          active: true,
+        },
+        data: {
+          active: false,
+        },
+      });
+    }
+  }
+
+  return new NextResponse(null, { status: 200 });
 }

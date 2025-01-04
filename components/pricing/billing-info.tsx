@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { pricingData, addOns } from "@/config/subscriptions";
 import { UserSubscriptionPlan } from "@/types";
 import { toast } from "sonner";
+import { AddonManager } from "@/components/pricing/addon-manager";
 
 const defaultPlan = {
   ...pricingData[0],
@@ -118,28 +119,7 @@ export function BillingInfo({ initialData }: BillingInfoProps) {
             </div>
 
             {/* Active Add-ons */}
-            {plan.activeAddons && plan.activeAddons.length > 0 && (
-              <div className="rounded-lg border bg-card p-6">
-                <h3 className="font-semibold mb-4">Active Add-ons</h3>
-                <div className="space-y-6">
-                  {plan.activeAddons.map((addonId) => {
-                    const addon = addOns.find(a => a.id === addonId);
-                    if (!addon) return null;
-                    return (
-                      <div key={addon.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">{addon.title}</h4>
-                          <span className="text-sm text-muted-foreground">
-                            ${plan.interval === "month" ? addon.price.monthly : addon.price.yearly}/{plan.interval}ly
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{addon.description}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <AddonManager subscriptionPlan={plan} />
 
             {/* Total Cost */}
             <div className="rounded-lg border bg-card p-6">

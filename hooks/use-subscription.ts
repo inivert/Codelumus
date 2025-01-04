@@ -2,23 +2,48 @@
 
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { getSubscription } from "@/actions/subscription";
+
+import { UserSubscriptionPlan } from "@/types";
+import { pricingData } from "@/config/subscriptions";
 
 export function useSubscriptionPlan() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const { data: subscriptionPlan, isLoading } = useQuery({
-    queryKey: ["subscription", session?.user?.id],
-    queryFn: getSubscription,
-    enabled: !!session?.user?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    retry: 1, // Only retry once if the request fails
+    queryKey: ["subscription"],
+    queryFn: async () => {
+      if (!session?.user?.email) {
+        return pricingData[0]; // Return default plan if no session
+      }
+
+      try {
+        const response = await fetch("/api/subscription", {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.error("Unauthorized - Session may have expired");
+            return pricingData[0]; // Return default plan on auth error
+          }
+          throw new Error("Failed to fetch subscription");
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+        return pricingData[0]; // Return default plan on error
+      }
+    },
+    enabled: status === "authenticated" && !!session?.user?.email,
   });
 
   return {
-    subscriptionPlan,
-    isLoading: isLoading && !!session?.user?.id
+    subscriptionPlan: subscriptionPlan || pricingData[0],
+    isLoading: status === "loading" || isLoading,
   };
 } 

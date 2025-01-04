@@ -29,14 +29,16 @@ export function BillingFormButton({
   
   const generateUserStripeSession = async () => {
     try {
-      // If user has an active subscription, redirect to billing portal
-      if (subscriptionPlan?.isPaid && !subscriptionPlan?.isCanceled) {
+      // If user has an active subscription and no addons are selected, redirect to billing portal
+      if (subscriptionPlan?.isPaid && !subscriptionPlan?.isCanceled && selectedAddons.length === 0) {
         window.location.href = "https://billing.stripe.com/p/login/test_bIYdTPc5A0qsguY7ss";
         return;
       }
 
-      const mainPriceId = offer.stripeIds[year ? "yearly" : "monthly"];
-      if (!mainPriceId) {
+      // If user has no subscription, use the main plan price
+      // If user has a subscription and is adding addons, only include the addon prices
+      const mainPriceId = !subscriptionPlan?.isPaid ? offer.stripeIds[year ? "yearly" : "monthly"] : null;
+      if (!subscriptionPlan?.isPaid && !mainPriceId) {
         throw new Error("Main price ID is missing");
       }
       console.log("Main price ID:", mainPriceId);
@@ -55,6 +57,11 @@ export function BillingFormButton({
 
       console.log("Selected addons:", selectedAddons);
       console.log("Prepared addons for Stripe:", addons);
+
+      // Only proceed if there's either a main plan or addons to purchase
+      if (!mainPriceId && addons.length === 0) {
+        throw new Error("No items selected for purchase");
+      }
 
       const response = await generateUserStripe(mainPriceId, addons);
       
@@ -90,7 +97,13 @@ export function BillingFormButton({
           <Icons.spinner className="mr-2 size-4 animate-spin" /> Loading...
         </>
       ) : (
-        <>{subscriptionPlan?.isPaid ? "Manage Subscription" : "Get Started"}</>
+        <>
+          {subscriptionPlan?.isPaid 
+            ? selectedAddons.length > 0 
+              ? "Add Selected Add-ons" 
+              : "Manage Subscription"
+            : "Get Started"}
+        </>
       )}
     </Button>
   );
