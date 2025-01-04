@@ -3,7 +3,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { ArrowUpRight, MoreHorizontal } from "lucide-react";
+import { ProgressUpdateDialog } from "./progress-update-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,9 @@ export type UserSubscription = {
   cost: number;
   periodEnd: Date | null;
   createdAt: Date;
+  analyticsProgress: number;
+  analyticsUrl: string | null;
+  hasAnalytics: boolean;
 };
 
 export const columns: ColumnDef<UserSubscription>[] = [
@@ -114,6 +119,33 @@ export const columns: ColumnDef<UserSubscription>[] = [
     cell: ({ row }) => {
       const date = row.getValue("periodEnd") as Date;
       return date ? formatDate(date) : "N/A";
+    },
+  },
+  {
+    accessorKey: "analyticsProgress",
+    header: "Website Progress",
+    cell: ({ row }) => {
+      const progress = row.getValue("analyticsProgress") as number;
+      const userId = row.original.id;
+      const userName = row.original.name;
+      const analyticsUrl = row.original.analyticsUrl;
+
+      return (
+        <div className="w-[200px] space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>{progress === 100 ? "Complete" : "In Progress"}</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+          <div className="pt-2">
+            <ProgressUpdateDialog
+              userId={userId}
+              currentProgress={progress}
+              userName={userName}
+            />
+          </div>
+        </div>
+      );
     },
   },
   {

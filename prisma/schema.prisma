@@ -51,22 +51,18 @@ model User {
   website                String?          @unique @map("website") @db.VarChar(191)
   createdAt              DateTime         @default(now()) @map("created_at")
   updatedAt              DateTime         @default(now()) @map("updated_at")
-
-  // Stripe subscription fields
   stripeCustomerId       String?          @unique @map("stripe_customer_id") @db.VarChar(191)
   stripeSubscriptionId   String?          @unique @map("stripe_subscription_id") @db.VarChar(191)
   stripePriceId          String?          @map("stripe_price_id") @db.VarChar(191)
   stripeCurrentPeriodEnd DateTime?        @map("stripe_current_period_end")
-  subscriptionStatus     String?          @map("subscription_status") // 'active', 'canceled', 'past_due', etc.
-
-  // Relations
+  subscriptionStatus     String?          @map("subscription_status")
   accounts               Account[]
   adminUpdates           AdminUpdate[]
   sentInvitations        Invitation[]     @relation("inviter")
   sessions               Session[]
   supportMessages        SupportMessage[]
-  analytics             UserAnalytics?
-  userAddons            UserAddon[]
+  userAddons             UserAddon[]
+  analytics              UserAnalytics?
 
   @@map("users")
 }
@@ -126,25 +122,22 @@ model UserAnalytics {
   umamiUrl  String   @map("umami_url")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  progress  Int      @default(0) @db.SmallInt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_analytics")
 }
 
-// Model for tracking user add-ons
 model UserAddon {
-  id        String   @id @default(cuid())
-  userId    String
-  addonId   String   // Matches the ID in your config/subscriptions.ts addOns array
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Stripe-specific fields
+  id                       String   @id @default(cuid())
+  userId                   String
+  addonId                  String
+  active                   Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
   stripeSubscriptionItemId String?  @unique
-  stripePriceId           String?
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripePriceId            String?
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, addonId])
   @@index([userId])

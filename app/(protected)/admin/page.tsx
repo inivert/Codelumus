@@ -47,7 +47,8 @@ export default async function AdminPage() {
       website: true,
       stripeCustomerId: true,
       stripeSubscriptionId: true,
-      createdAt: true
+      createdAt: true,
+      analytics: true
     },
     orderBy: {
       createdAt: 'desc'
@@ -114,6 +115,9 @@ export default async function AdminPage() {
           ? new Date(stripeSubscription.current_period_end * 1000)
           : null,
         createdAt: user.createdAt,
+        analyticsProgress: user.analytics?.progress ?? 0,
+        analyticsUrl: user.analytics?.umamiUrl || null,
+        hasAnalytics: !!user.analytics
       };
     })
   );

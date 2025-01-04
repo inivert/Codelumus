@@ -3,15 +3,18 @@
 import { Button } from "@/components/ui/button";
 import { BarChart } from "lucide-react";
 
-const UMAMI_DASHBOARD_URL = "https://cloud.umami.is/share/CdCG51dHdfBvERgD/www.codelumus.com";
+interface AnalyticsButtonProps {
+  analyticsUrl?: string;
+}
 
-export function AnalyticsButton() {
+export function AnalyticsButton({ analyticsUrl }: AnalyticsButtonProps) {
   return (
     <Button 
       size="lg"
       variant="default"
       className="gap-2"
-      onClick={() => window.open(UMAMI_DASHBOARD_URL, '_blank')}
+      onClick={() => analyticsUrl && window.open(analyticsUrl, '_blank')}
+      disabled={!analyticsUrl}
     >
       <BarChart className="h-5 w-5" />
       Open Analytics Dashboard

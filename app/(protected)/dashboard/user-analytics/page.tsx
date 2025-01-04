@@ -6,8 +6,9 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { getCurrentUser } from "@/lib/session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { RefreshButton } from "@/components/analytics/refresh-button";
-import { UmamiModal } from "@/components/modals/umami-modal";
+import { AnalyticsButton } from "@/components/analytics/analytics-button";
 import { prisma } from "@/lib/db";
 
 export const metadata = constructMetadata({
@@ -23,13 +24,10 @@ export default async function UserAnalyticsPage() {
       redirect("/login");
     }
 
-    // Get user's Umami URL from the database
+    // Get user's analytics data from the database
     const analytics = await prisma.userAnalytics.findUnique({
       where: {
         userId: user.id
-      },
-      select: {
-        umamiUrl: true
       }
     });
 
@@ -39,35 +37,61 @@ export default async function UserAnalyticsPage() {
           heading="Website Analytics"
           text="Monitor your website performance and user engagement"
         />
-        <div className="flex-1 p-4 md:p-8">
+        <div className="flex-1 p-4 md:p-8 space-y-6">
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <CardTitle>Analytics Dashboard</CardTitle>
                   <CardDescription>
-                    {analytics ? "View your website analytics" : "Analytics setup in progress"}
+                    View detailed analytics for your website including traffic, user behavior, and engagement metrics.
                   </CardDescription>
                 </div>
                 <BarChart className="h-5 w-5 text-muted-foreground" />
               </div>
             </CardHeader>
+            <CardContent className="flex items-center justify-center py-6">
+              <AnalyticsButton analyticsUrl={analytics?.umamiUrl} />
+            </CardContent>
+          </Card>
+
+          {/* Progress bar card underneath */}
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-sm">Website Development Progress</CardTitle>
+            </CardHeader>
             <CardContent>
-              {analytics ? (
-                <div className="flex justify-center">
-                  <UmamiModal analyticsUrl={analytics.umamiUrl} />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <Alert className="max-w-lg">
-                    <AlertTitle>Analytics Setup Required</AlertTitle>
-                    <AlertDescription>
-                      Your analytics dashboard is being configured by an administrator. Once ready, you&apos;ll have access to detailed metrics and insights.
+              {analytics?.progress === 100 ? (
+                <div className="space-y-4">
+                  <Alert className="bg-green-500/15 border-green-500/30">
+                    <AlertTitle className="text-green-500">Congratulations! 🎉</AlertTitle>
+                    <AlertDescription className="text-green-500/90">
+                      Your website is now complete and ready to go! You can now start monitoring your website analytics.
                     </AlertDescription>
                   </Alert>
-                  <RefreshButton>
-                    Check Availability
-                  </RefreshButton>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Development Complete</span>
+                      <span>100%</span>
+                    </div>
+                    <Progress value={100} className="h-2" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Alert>
+                    <AlertTitle>Website Under Development</AlertTitle>
+                    <AlertDescription>
+                      Our team is working on your website. You can track the progress here. Once complete, you'll have access to your website analytics.
+                    </AlertDescription>
+                  </Alert>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Development Progress</span>
+                      <span>{analytics?.progress || 0}%</span>
+                    </div>
+                    <Progress value={analytics?.progress || 0} className="h-2" />
+                  </div>
                 </div>
               )}
             </CardContent>
