@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 
-export default auth((req) => {
+export default auth((req, ctx) => {
   const isAuth = !!req.auth;
   const isAuthPage = req.nextUrl.pathname.startsWith('/login');
   const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
