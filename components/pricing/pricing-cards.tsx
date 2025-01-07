@@ -30,6 +30,8 @@ const frequencies = [
 
 interface PricingCardsProps {
   redirect?: string;
+  userId?: string;
+  subscriptionPlan?: UserSubscriptionPlan;
 }
 
 // Dynamically import heavy components
@@ -397,7 +399,7 @@ const AuthenticatedPricingView = memo(({
 });
 AuthenticatedPricingView.displayName = "AuthenticatedPricingView";
 
-export function PricingCards({ redirect }: PricingCardsProps) {
+export function PricingCards({ redirect, userId, subscriptionPlan: initialSubscriptionPlan }: PricingCardsProps) {
   const [frequency, setFrequency] = useState<"monthly" | "yearly">("monthly");
   const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
   const { data: session } = useSession();
@@ -405,6 +407,7 @@ export function PricingCards({ redirect }: PricingCardsProps) {
   const { subscriptionPlan: fetchedPlan, isLoading: isLoadingSubscription } = useSubscriptionPlan();
 
   const subscriptionPlan = useMemo(() => {
+    if (initialSubscriptionPlan) return initialSubscriptionPlan;
     if (!fetchedPlan) return defaultPlan;
     return {
       ...fetchedPlan,
@@ -412,7 +415,7 @@ export function PricingCards({ redirect }: PricingCardsProps) {
       activeAddons: fetchedPlan.activeAddons || [],
       isPaid: Boolean(fetchedPlan.stripeSubscriptionId && !fetchedPlan.isCanceled)
     };
-  }, [fetchedPlan]);
+  }, [fetchedPlan, initialSubscriptionPlan]);
 
   if (session && isLoadingSubscription) {
     return (

@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 
-export default auth((req, ctx) => {
+export default auth((req) => {
   const isAuth = !!req.auth;
   const isAuthPage = req.nextUrl.pathname.startsWith('/login');
   const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
@@ -8,7 +8,7 @@ export default auth((req, ctx) => {
 
   // Allow all auth-related routes
   if (isApiAuthRoute) {
-    return null;
+    return;
   }
 
   // Redirect from auth page if already authenticated
@@ -16,7 +16,7 @@ export default auth((req, ctx) => {
     if (isAuth) {
       return Response.redirect(new URL('/dashboard', req.nextUrl));
     }
-    return null;
+    return;
   }
 
   // Protect dashboard routes
@@ -26,10 +26,10 @@ export default auth((req, ctx) => {
 
   // Allow public routes
   if (!isDashboardRoute && !isAuth) {
-    return null;
+    return;
   }
 
-  return null;
+  return;
 })
 
 // Optionally, don't invoke Middleware on some paths

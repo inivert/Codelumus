@@ -118,7 +118,7 @@ export const columns: ColumnDef<UserSubscription>[] = [
     header: "Renewal",
     cell: ({ row }) => {
       const date = row.getValue("periodEnd") as Date;
-      return date ? formatDate(date) : "N/A";
+      return date ? formatDate(date.getTime()) : "N/A";
     },
   },
   {

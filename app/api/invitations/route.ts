@@ -20,7 +20,8 @@ export async function POST(req: Request) {
 
     await sendInvitationEmail(
       email,
-      session.user.name || "The Admin Team"
+      session.user.name || "The Admin Team",
+      session.user.id
     );
 
     return NextResponse.json({ success: true });

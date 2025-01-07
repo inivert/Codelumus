@@ -62,17 +62,23 @@ export const getRecentTransactions = unstable_cache(
         expand: ['data.customer'],
       });
 
-      return charges.data.map(charge => ({
-        id: charge.id,
-        amount: charge.amount / 100,
-        status: charge.status,
-        customer: {
-          name: charge.customer?.name || 'Unknown',
-          email: charge.customer?.email || 'Unknown',
-        },
-        created: new Date(charge.created * 1000).toISOString(),
-        type: charge.refunded ? 'Refund' : 'Charge'
-      }));
+      return charges.data.map(charge => {
+        const customer = charge.customer && typeof charge.customer === 'object' && !('deleted' in charge.customer) 
+          ? charge.customer 
+          : null;
+
+        return {
+          id: charge.id,
+          amount: charge.amount / 100,
+          status: charge.status,
+          customer: {
+            name: customer?.name ?? 'Unknown',
+            email: customer?.email ?? 'Unknown',
+          },
+          created: new Date(charge.created * 1000).toISOString(),
+          type: charge.refunded ? 'Refund' : 'Charge'
+        };
+      });
     } catch (error) {
       console.error("Error fetching recent transactions:", error);
       return [];
@@ -106,7 +112,11 @@ export const getSubscribedUsers = unstable_cache(
 
       // Batch fetch subscriptions in groups of 10 to avoid rate limits
       const batchSize = 10;
-      const usersWithStatus = [];
+      const usersWithStatus: Array<typeof users[0] & { 
+        status: string; 
+        cancelAt: Date | null; 
+        cancelAtPeriodEnd: boolean; 
+      }> = [];
 
       for (let i = 0; i < users.length; i += batchSize) {
         const batch = users.slice(i, i + batchSize);

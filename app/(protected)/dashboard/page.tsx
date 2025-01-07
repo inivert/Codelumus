@@ -54,7 +54,7 @@ export default async function DashboardPage() {
         heading="Dashboard"
         text="Welcome to Codelumus"
       />
-      {user && <SetupProfileModal name={dbUser?.name} website={dbUser?.website} />}
+      {user && <SetupProfileModal name={dbUser?.name ?? null} website={dbUser?.website ?? null} />}
       <div className="grid gap-4">
         {updates.length > 0 ? (
           updates.map((update) => (

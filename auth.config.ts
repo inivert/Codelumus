@@ -35,7 +35,7 @@ export default {
 
         // Check if user exists in database
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email.toString() },
           select: {
             id: true,
             email: true,
@@ -59,7 +59,7 @@ export default {
         // If user doesn't exist but has a pending invitation, create the user
         const invitation = await prisma.invitation.findFirst({
           where: {
-            email: credentials.email,
+            email: credentials.email.toString(),
             status: "PENDING"
           }
         });
@@ -68,7 +68,7 @@ export default {
           // Create new user
           const newUser = await prisma.user.create({
             data: {
-              email: credentials.email,
+              email: credentials.email.toString(),
               role: "USER",
             },
             select: {

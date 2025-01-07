@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { addOns, pricingData } from "@/config/subscriptions";
 import { formatDate } from "@/lib/utils";
 import { getUserSubscriptionPlan } from "@/lib/subscription";
+import type { Stripe } from 'stripe';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,6 +25,32 @@ async function getSubscriptionData(stripeSubscriptionId: string | null) {
     console.error("Error fetching subscription:", error);
     return null;
   }
+}
+
+interface SubscriptionItem extends Stripe.SubscriptionItem {
+  price: Stripe.Price & {
+    product: Stripe.Product;
+    unit_amount: number;
+  };
+}
+
+interface UserWithSubscription {
+  id: string;
+  name: string | null;
+  email: string | null;
+  status: string;
+  subscriptionId: string | null;
+  customerId: string | null;
+  plan: string;
+  website: string;
+  addons: string[];
+  interval: string;
+  cost: number;
+  periodEnd: Date | null;
+  createdAt: Date;
+  analyticsProgress: number;
+  analyticsUrl: string | null;
+  hasAnalytics: boolean;
 }
 
 export default async function AdminPage() {
@@ -56,10 +83,10 @@ export default async function AdminPage() {
   });
 
   // Fetch subscription details for each user directly from Stripe
-  const usersWithSubscriptions = await Promise.all(
+  const usersWithSubscriptions: UserWithSubscription[] = await Promise.all(
     users.map(async (user) => {
-      let stripeSubscription = null;
-      let subscriptionItems = [];
+      let stripeSubscription: Stripe.Subscription | null = null;
+      let subscriptionItems: SubscriptionItem[] = [];
       
       if (user.stripeSubscriptionId) {
         try {
@@ -69,9 +96,16 @@ export default async function AdminPage() {
             {
               expand: ['items.data.price.product', 'items.data.price']
             }
-          );
+          ) as Stripe.Subscription & { items: { data: SubscriptionItem[] } };
           
-          subscriptionItems = stripeSubscription.items.data;
+          subscriptionItems = stripeSubscription.items.data.map(item => ({
+            ...item,
+            price: {
+              ...item.price,
+              product: item.price.product as Stripe.Product,
+              unit_amount: (item.price as Stripe.Price).unit_amount || 0
+            }
+          })) as SubscriptionItem[];
         } catch (error) {
           console.error(`Error fetching subscription for user ${user.id}:`, error);
         }
@@ -79,16 +113,16 @@ export default async function AdminPage() {
 
       // Get base plan and addons from Stripe data
       const basePlanItem = subscriptionItems.find(
-        item => !item.price.product.metadata.type || item.price.product.metadata.type !== 'addon'
+        item => !item.price.product.metadata?.type || item.price.product.metadata.type !== 'addon'
       );
       const addonItems = subscriptionItems.filter(
-        item => item.price.product.metadata.type === 'addon'
+        item => item.price.product.metadata?.type === 'addon'
       );
 
       // Calculate costs directly from Stripe prices
-      const baseAmount = basePlanItem ? basePlanItem.price.unit_amount! / 100 : 0;
+      const baseAmount = basePlanItem?.price.unit_amount ? basePlanItem.price.unit_amount / 100 : 0;
       const addonsAmount = addonItems.reduce((sum, item) => 
-        sum + (item.price.unit_amount! / 100), 0
+        sum + (item.price.unit_amount ? item.price.unit_amount / 100 : 0), 0
       );
 
       const totalCost = baseAmount + addonsAmount;
@@ -96,7 +130,7 @@ export default async function AdminPage() {
 
       // Get formatted addon names from Stripe metadata
       const addonNames = addonItems.map(item => 
-        item.price.product.name || item.price.product.metadata.title || 'Unknown Addon'
+        item.price.product.name || item.price.product.metadata?.title || 'Unknown Addon'
       );
 
       return {

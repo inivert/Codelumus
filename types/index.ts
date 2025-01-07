@@ -103,6 +103,10 @@ export type AddOn = {
     monthly: number;
     yearly: number;
   };
+  stripeIds: {
+    monthly: string | null;
+    yearly: string | null;
+  };
   description: string;
   features: string[];
 }; 

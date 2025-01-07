@@ -7,12 +7,14 @@ import { toast } from "sonner";
 
 interface CustomerPortalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "default" | "sm" | "lg" | "icon";
+  userStripeId?: string | null;
 }
 
 export function CustomerPortalButton({
   className,
   size,
   children,
+  userStripeId,
   ...props
 }: CustomerPortalButtonProps) {
   let [isPending, startTransition] = useTransition();
@@ -22,6 +24,10 @@ export function CustomerPortalButton({
       startTransition(async () => {
         const response = await fetch("/api/stripe/portal", {
           method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ customerId: userStripeId }),
         });
         const data = await response.json();
 
